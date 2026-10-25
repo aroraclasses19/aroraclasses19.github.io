@@ -144,6 +144,8 @@ textarea{min-height:96px;resize:vertical}
 .foot .eyebrow{color:var(--board-ink);opacity:.75}
 .foot p{opacity:.9}
 #toast{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;max-width:420px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:10px;font-weight:600;text-align:center}
+.card.hl{outline:3px solid var(--chalk);outline-offset:2px}
+.board .actions{margin-top:12px}
 .boot{padding:40px 16px;text-align:center;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.tab,.btn,.chip,.adminbtn{transition:background .15s,color .15s}}
 </style>
@@ -187,7 +189,7 @@ try{
 /* ---------- state ---------- */
 const S={
   view:'site',tab:'work',atab:'work',subFilter:'pending',confirm:'',myName:lsGet('arora-name'),
-  admin:false,email:'',pend:{},fSub:'all',fSort:'new',busy:false,
+  admin:false,email:'',pend:{},fSub:'all',fSort:'new',busy:false,focusId:'',focusDone:true,
   work:[],notices:[],batches:[],results:[],subjects:[],posts:[],subs:[],
   info:{about:'',phone:'',address:''},word:null,mine:null,loaded:{}
 };
@@ -266,6 +268,22 @@ const wordCard=w=>'<div class="board"><p class="label">Aaj ka word · '+fmt(w.at
 const header=btn=>'<header class="top"><div class="wrap"><div class="brandrow"><img class="logo" src="'+LOGO+'" alt="Arora Classes logo"><div><h1 class="brand">Arora Classes</h1><p class="sub">Coaching class management</p></div></div><div class="hrow"><p class="tag">Knowledge · Practice · Progress</p>'+(btn?'<button type="button" class="adminbtn" data-act="adminopen">'+(S.admin?'Admin Panel':'Admin Login')+'</button>':'')+'</div></div></header>';
 const footer=()=>'<footer class="foot"><div class="wrap"><p class="eyebrow">Records</p><p><strong>Arora Classes</strong></p><p class="small">Class ki jaankari cloud se update hoti hai.</p></div></footer>';
 const subId=(wid,name)=>wid+'__'+encodeURIComponent(name.trim().toLowerCase().replace(/\s+/g,' ')).replace(/%/g,'_');
+const SITE='https://aroraclasses19.github.io/';
+const clip=(s,n)=>{s=String(s||'').trim();return s.length>n?s.slice(0,n-1)+'…':s};
+function shareText(kind,it){
+  const link=kind==='site'?SITE:SITE+'#'+kind+(it&&it.id&&kind!=='word'?'-'+it.id:'');
+  let m='';
+  if(kind==='work')m='*Arora Classes: Daily Work ('+it.subject+')*\n'+it.title+'\n'+clip(it.text,400);
+  else if(kind==='notices')m='*Arora Classes: Notice*\n'+clip(it.text,500);
+  else if(kind==='word')m='*Arora Classes: Aaj ka word*\n'+it.word+' = '+it.meaning+'\nExample: '+clip(it.example,200)+'\n\nApna sentence is link par bhejo:';
+  else if(kind==='gallery')m='*Arora Classes: Photo*'+(it.caption?'\n'+clip(it.caption,200):'');
+  else if(kind==='batches')m='*Arora Classes: '+it.name+'*\nFees: ₹'+it.fee+' / mahina\nSeats: '+it.seats+(it.desc?'\n'+clip(it.desc,300):'')+'\nRoz shaam 4 se 5 baje';
+  else if(kind==='results')m='*Arora Classes: Result*\n'+it.name+' | '+it.exam+' | '+it.marks;
+  else m='*Arora Classes*\nDaily Work, notice, Daily Word, photo, batch aur fees ek hi jagah. Roz shaam 4 se 5 baje.';
+  return m+'\n\n'+link;
+}
+const shareBtn=(kind,it,cls,label)=>'<a class="btn '+(cls||'ghost')+' sm" href="https://wa.me/?text='+encodeURIComponent(shareText(kind,it))+'" target="_blank" rel="noopener">'+(label||'WhatsApp par share')+'</a>';
+const cardId=id=>' id="it-'+esc(id)+'" class="card'+(S.focusId===id?' hl':'')+'"';
 
 /* ---------- student views ---------- */
 const STABS=[['work','Daily Work'],['notices','Notice Board'],['word','Daily Word'],['gallery','Gallery'],['batches','Batches'],['results','Results']];
@@ -292,7 +310,7 @@ function vMine(){
 function vWord(){
   if(!S.word)return '<section class="block"><h2>Daily Word</h2>'+empty('Aaj ka word abhi teacher ne nahi diya.')+'</section>';
   const sent=S.mine&&!S.mine.none&&!S.mine.err;
-  return '<section class="block"><h2>Daily Word</h2>'+wordCard(S.word)+'</section>'
+  return '<section class="block"><h2>Daily Word</h2>'+wordCard(S.word)+'<div class="actions">'+shareBtn('word',S.word,'accent')+'</div></section>'
   +(sent?'':'<section class="block"><h2>Apna sentence banao</h2><p class="muted">Is word se apne hisab se ek sentence likho. Sentence mein word zaroor use karo. Ek word ka ek hi sentence bhej sakte ho, to dhyan se likho.</p>'
   +'<form data-form="sentence"><div class="field"><label for="f-sn">Tumhara naam</label><input id="f-sn" name="student" maxlength="40" value="'+esc(S.myName)+'" required autocomplete="off"></div>'
   +'<div class="field"><label for="f-ss">Tumhara sentence</label><textarea id="f-ss" name="sentence" maxlength="300" placeholder="Yahan English mein sentence likho" required></textarea></div>'
@@ -304,19 +322,19 @@ function siteTab(){
     const list=S.work.filter(w=>S.fSub==='all'||w.subject===S.fSub).slice().sort((a,b)=>S.fSort==='new'?byNew(a,b):byNew(b,a));
     return '<section class="block"><h2>Latest Daily Work</h2><div class="filters"><div class="field"><label for="f-sub">Subject</label><select id="f-sub" data-change="fsub">'+subjOpts(S.fSub,true)+'</select></div>'
     +'<div class="field"><label for="f-sort">Kram</label><select id="f-sort" data-change="fsort"><option value="new"'+(S.fSort==='new'?' selected':'')+'>Newest first</option><option value="old"'+(S.fSort==='old'?' selected':'')+'>Oldest first</option></select></div></div>'
-    +(list.length?'<ul class="list">'+list.map(w=>'<li class="card"><div class="row"><h3>'+esc(w.title)+'</h3><span class="small muted">'+fmt(w.at)+'</span></div><div><span class="pill">'+esc(w.subject)+'</span></div><p>'+esc(w.text)+'</p>'+photos(w.photoIds)+'</li>').join('')+'</ul>':empty(S.loaded.work?'Abhi koi Daily Work nahi hai.':'Load ho raha hai…'))+'</section>';
+    +(list.length?'<ul class="list">'+list.map(w=>'<li'+cardId(w.id)+'><div class="row"><h3>'+esc(w.title)+'</h3><span class="small muted">'+fmt(w.at)+'</span></div><div><span class="pill">'+esc(w.subject)+'</span></div><p>'+esc(w.text)+'</p>'+photos(w.photoIds)+'<div class="actions">'+shareBtn('work',w)+'</div></li>').join('')+'</ul>':empty(S.loaded.work?'Abhi koi Daily Work nahi hai.':'Load ho raha hai…'))+'</section>';
   }
-  if(t==='notices')return '<section class="block"><h2>Notice Board</h2>'+(S.notices.length?'<ul class="list">'+S.notices.slice().sort(byNew).map(n=>'<li class="card"><p>'+esc(n.text)+'</p>'+photos(n.photoIds)+'<p class="small muted">'+fmt(n.at)+'</p></li>').join('')+'</ul>':empty(S.loaded.notices?'Abhi koi notice nahi hai.':'Load ho raha hai…'))+'</section>';
+  if(t==='notices')return '<section class="block"><h2>Notice Board</h2>'+(S.notices.length?'<ul class="list">'+S.notices.slice().sort(byNew).map(n=>'<li'+cardId(n.id)+'><p>'+esc(n.text)+'</p>'+photos(n.photoIds)+'<p class="small muted">'+fmt(n.at)+'</p><div class="actions">'+shareBtn('notices',n)+'</div></li>').join('')+'</ul>':empty(S.loaded.notices?'Abhi koi notice nahi hai.':'Load ho raha hai…'))+'</section>';
   if(t==='word')return vWord();
-  if(t==='gallery')return '<section class="block"><h2>Gallery</h2>'+(S.posts.length?'<ul class="list">'+S.posts.slice().sort(byNew).map(g=>'<li class="card">'+(g.caption?'<h3>'+esc(g.caption)+'</h3>':'')+photos(g.photoIds,true)+'<p class="small muted">'+fmt(g.at)+'</p></li>').join('')+'</ul>':empty(S.loaded.gallery?'Photo jald aayengi.':'Load ho raha hai…'))+'</section>';
-  if(t==='batches')return '<section class="block"><h2>Batches aur fees</h2>'+(S.batches.length?'<ul class="list">'+S.batches.slice().sort((a,b)=>(a.at||0)-(b.at||0)).map(b=>'<li class="card"><div class="row"><h3>'+esc(b.name)+'</h3><span class="fee">₹'+esc(b.fee)+'<span class="small muted"> / mahina</span></span></div><div class="meta"><span>Roz 4–5 PM</span><span>'+esc(b.seats)+' seats</span></div>'+(b.desc?'<p>'+esc(b.desc)+'</p>':'')+photos(b.photoIds)+'</li>').join('')+'</ul>':empty(S.loaded.batches?'Batch jald add honge.':'Load ho raha hai…'))+contact()+'</section>';
-  if(t==='results')return '<section class="block"><h2>Results</h2>'+(S.results.length?'<ul class="list">'+S.results.slice().sort(byNew).map(r=>'<li class="card"><div class="row"><h3>'+esc(r.name)+'</h3><span class="marks">'+esc(r.marks)+'</span></div><p class="small muted">'+esc(r.exam)+'</p>'+photos(r.photoIds)+'</li>').join('')+'</ul>':empty(S.loaded.results?'Result jald aayega.':'Load ho raha hai…'))+'</section>';
+  if(t==='gallery')return '<section class="block"><h2>Gallery</h2>'+(S.posts.length?'<ul class="list">'+S.posts.slice().sort(byNew).map(g=>'<li'+cardId(g.id)+'>'+(g.caption?'<h3>'+esc(g.caption)+'</h3>':'')+photos(g.photoIds,true)+'<p class="small muted">'+fmt(g.at)+'</p><div class="actions">'+shareBtn('gallery',g)+'</div></li>').join('')+'</ul>':empty(S.loaded.gallery?'Photo jald aayengi.':'Load ho raha hai…'))+'</section>';
+  if(t==='batches')return '<section class="block"><h2>Batches aur fees</h2>'+(S.batches.length?'<ul class="list">'+S.batches.slice().sort((a,b)=>(a.at||0)-(b.at||0)).map(b=>'<li'+cardId(b.id)+'><div class="row"><h3>'+esc(b.name)+'</h3><span class="fee">₹'+esc(b.fee)+'<span class="small muted"> / mahina</span></span></div><div class="meta"><span>Roz 4–5 PM</span><span>'+esc(b.seats)+' seats</span></div>'+(b.desc?'<p>'+esc(b.desc)+'</p>':'')+photos(b.photoIds)+'<div class="actions">'+shareBtn('batches',b)+'</div></li>').join('')+'</ul>':empty(S.loaded.batches?'Batch jald add honge.':'Load ho raha hai…'))+contact()+'</section>';
+  if(t==='results')return '<section class="block"><h2>Results</h2>'+(S.results.length?'<ul class="list">'+S.results.slice().sort(byNew).map(r=>'<li'+cardId(r.id)+'><div class="row"><h3>'+esc(r.name)+'</h3><span class="marks">'+esc(r.marks)+'</span></div><p class="small muted">'+esc(r.exam)+'</p>'+photos(r.photoIds)+'<div class="actions">'+shareBtn('results',r)+'</div></li>').join('')+'</ul>':empty(S.loaded.results?'Result jald aayega.':'Load ho raha hai…'))+'</section>';
   return '';
 }
 function vSite(){
   const tabs=STABS.map(t=>'<button type="button" class="tab"'+(S.tab===t[0]?' aria-current="page"':'')+' data-act="tab" data-tab="'+t[0]+'">'+t[1]+'</button>').join('');
   return header(true)
-  +'<div class="wrap welcome"><h2>Namaste, Arora Classes mein aapka swagat hai.</h2><p class="lead">'+esc(S.info.about||DEFAULT_ABOUT)+'</p><span class="timing">Roz 4:00 – 5:00 PM</span>'
+  +'<div class="wrap welcome"><h2>Namaste, Arora Classes mein aapka swagat hai.</h2><p class="lead">'+esc(S.info.about||DEFAULT_ABOUT)+'</p><span class="timing">Roz 4:00 – 5:00 PM</span><div class="actions">'+shareBtn('site',null,'ghost','Website WhatsApp par share karo')+'</div>'
   +'<div class="counters"><div class="counter"><b>'+S.work.length+'</b><span>Daily Work</span></div><div class="counter"><b>'+S.notices.length+'</b><span>Notice</span></div><div class="counter"><b>'+S.results.length+'</b><span>Result</span></div></div></div>'
   +'<nav class="tabs" aria-label="Menu"><div class="wrap tabrow">'+tabs+'</div></nav>'
   +'<main class="wrap">'+siteTab()+'</main>'+footer();
@@ -346,8 +364,8 @@ const PANELS={
     +'<div class="field"><label for="k-t">Title</label><input id="k-t" name="title" placeholder="Exercise 3.2" required autocomplete="off"></div>'
     +'<div class="field"><label for="k-x">Kya karna hai</label><textarea id="k-x" name="text" required></textarea></div>'
     +photoField('work')+'<button class="btn primary" type="submit">Work bhejo</button></form></section>'
-    +'<section class="block"><h3>Bheje hue work</h3>'+(S.work.length?'<ul class="list">'+S.work.slice().sort(byNew).map(w=>'<li class="card"><div class="row"><strong>'+esc(w.title)+'</strong>'+delBtn('work',w.id)+'</div><p class="small muted">'+esc(w.subject)+' · '+fmt(w.at)+'</p><p>'+esc(w.text)+'</p>'+photos(w.photoIds)+'</li>').join('')+'</ul>':empty('Abhi koi work nahi.'))+'</section>',
-  word:()=>'<section class="block"><h3>Abhi ka word</h3>'+(S.word?wordCard(S.word):empty('Koi word set nahi hai.'))+'</section>'
+    +'<section class="block"><h3>Bheje hue work</h3>'+(S.work.length?'<ul class="list">'+S.work.slice().sort(byNew).map(w=>'<li class="card"><div class="row"><strong>'+esc(w.title)+'</strong>'+delBtn('work',w.id)+'</div><p class="small muted">'+esc(w.subject)+' · '+fmt(w.at)+'</p><p>'+esc(w.text)+'</p>'+photos(w.photoIds)+'<div class="actions">'+shareBtn('work',w)+'</div></li>').join('')+'</ul>':empty('Abhi koi work nahi.'))+'</section>',
+  word:()=>'<section class="block"><h3>Abhi ka word</h3>'+(S.word?wordCard(S.word)+'<div class="actions">'+shareBtn('word',S.word,'accent')+'</div>':empty('Koi word set nahi hai.'))+'</section>'
     +'<section class="block"><h3>Naya word set karo</h3><p class="muted small">Naya word lagane par pichle word ke sentence ki list band ho jati hai aur naye word ki nayi list shuru hoti hai.</p><form data-form="setword">'
     +'<div class="field"><label for="w-w">English word</label><input id="w-w" name="word" required autocomplete="off"></div>'
     +'<div class="field"><label for="w-m">Hindi matlab</label><input id="w-m" name="meaning" required autocomplete="off"></div>'
@@ -362,9 +380,9 @@ const PANELS={
     +(list.length?'<ul class="list">'+list.map(s=>'<li class="card"><div class="row"><strong>'+esc(s.student)+'</strong><span class="badge '+esc(s.status)+'">'+(STATUS[s.status]||'')+'</span></div><p class="sentence">'+esc(s.sentence)+'</p><div class="actions"><button type="button" class="btn sm '+(s.status==='sahi'?'on-good':'ghost')+'" data-act="mark" data-id="'+esc(s.id)+'" data-val="sahi">Sahi ✓</button><button type="button" class="btn sm '+(s.status==='galat'?'on-bad':'ghost')+'" data-act="mark" data-id="'+esc(s.id)+'" data-val="galat">Galat ✗</button></div></li>').join('')+'</ul>':empty('Is filter mein koi sentence nahi.'))+'</section>';
   },
   notices:()=>'<section class="block"><h3>Naya notice</h3><form data-form="addnotice"><div class="field"><label for="n-t">Notice likho</label><textarea id="n-t" name="text" required></textarea></div>'+photoField('notices')+'<button class="btn primary" type="submit">Notice lagao</button></form></section>'
-    +'<section class="block"><h3>Lage hue notice</h3>'+(S.notices.length?'<ul class="list">'+S.notices.slice().sort(byNew).map(n=>'<li class="card"><p>'+esc(n.text)+'</p>'+photos(n.photoIds)+'<div class="row"><span class="small muted">'+fmt(n.at)+'</span>'+delBtn('notices',n.id)+'</div></li>').join('')+'</ul>':empty('Koi notice nahi.'))+'</section>',
+    +'<section class="block"><h3>Lage hue notice</h3>'+(S.notices.length?'<ul class="list">'+S.notices.slice().sort(byNew).map(n=>'<li class="card"><p>'+esc(n.text)+'</p>'+photos(n.photoIds)+'<div class="row"><span class="small muted">'+fmt(n.at)+'</span>'+delBtn('notices',n.id)+'</div><div class="actions">'+shareBtn('notices',n)+'</div></li>').join('')+'</ul>':empty('Koi notice nahi.'))+'</section>',
   gallery:()=>'<section class="block"><h3>Gallery mein photo jodo</h3><form data-form="addgallery"><div class="field"><label for="g-c">Photo ka naam (zaroori nahi)</label><input id="g-c" name="caption" autocomplete="off"></div>'+photoField('gallery')+'<button class="btn primary" type="submit">Gallery mein lagao</button></form></section>'
-    +'<section class="block"><h3>Gallery ki photo</h3>'+(S.posts.length?'<ul class="list">'+S.posts.slice().sort(byNew).map(g=>'<li class="card"><div class="row"><strong>'+esc(g.caption||'Bina naam')+'</strong>'+delBtn('gallery',g.id)+'</div>'+photos(g.photoIds)+'</li>').join('')+'</ul>':empty('Abhi koi photo nahi.'))+'</section>',
+    +'<section class="block"><h3>Gallery ki photo</h3>'+(S.posts.length?'<ul class="list">'+S.posts.slice().sort(byNew).map(g=>'<li class="card"><div class="row"><strong>'+esc(g.caption||'Bina naam')+'</strong>'+delBtn('gallery',g.id)+'</div>'+photos(g.photoIds)+'<div class="actions">'+shareBtn('gallery',g)+'</div></li>').join('')+'</ul>':empty('Abhi koi photo nahi.'))+'</section>',
   subjects:()=>'<section class="block"><h3>Naya subject jodo</h3><form data-form="addsubject"><div class="field"><label for="u-n">Subject ka naam</label><input id="u-n" name="name" required autocomplete="off"></div><button class="btn primary" type="submit">Subject jodo</button></form></section>'
     +'<section class="block"><h3>Abhi ke subjects</h3>'+(S.subjects.length?'<ul class="list">'+S.subjects.map(s=>'<li class="card"><div class="row"><strong>'+esc(s.name)+'</strong>'+delBtn('subjects',s.id)+'</div></li>').join('')+'</ul>':empty('Koi subject nahi. Pehle subject jodo (jaise Maths, English), phir Daily Work mein chun sakoge.'))+'</section>',
   batches:()=>'<section class="block"><h3>Naya batch jodo</h3><form data-form="addbatch">'
@@ -373,13 +391,13 @@ const PANELS={
     +'<div class="field"><label for="b-s">Seats</label><input id="b-s" name="seats" inputmode="numeric" required autocomplete="off"></div>'
     +'<div class="field"><label for="b-d">Details</label><textarea id="b-d" name="desc"></textarea></div>'
     +photoField('batches')+'<button class="btn primary" type="submit">Batch jodo</button></form></section>'
-    +'<section class="block"><h3>Abhi ke batches</h3>'+(S.batches.length?'<ul class="list">'+S.batches.map(b=>'<li class="card"><div class="row"><strong>'+esc(b.name)+'</strong>'+delBtn('batches',b.id)+'</div><p class="small muted">₹'+esc(b.fee)+' · '+esc(b.seats)+' seats</p>'+photos(b.photoIds)+'</li>').join('')+'</ul>':empty('Koi batch nahi.'))+'</section>',
+    +'<section class="block"><h3>Abhi ke batches</h3>'+(S.batches.length?'<ul class="list">'+S.batches.map(b=>'<li class="card"><div class="row"><strong>'+esc(b.name)+'</strong>'+delBtn('batches',b.id)+'</div><p class="small muted">₹'+esc(b.fee)+' · '+esc(b.seats)+' seats</p>'+photos(b.photoIds)+'<div class="actions">'+shareBtn('batches',b)+'</div></li>').join('')+'</ul>':empty('Koi batch nahi.'))+'</section>',
   results:()=>'<section class="block"><h3>Result jodo</h3><form data-form="addresult">'
     +'<div class="field"><label for="r-n">Student ka naam</label><input id="r-n" name="name" required autocomplete="off"></div>'
     +'<div class="field"><label for="r-e">Test ka naam</label><input id="r-e" name="exam" required autocomplete="off"></div>'
     +'<div class="field"><label for="r-m">Marks</label><input id="r-m" name="marks" placeholder="46/50" required autocomplete="off"></div>'
     +photoField('results')+'<button class="btn primary" type="submit">Result jodo</button></form></section>'
-    +'<section class="block"><h3>Abhi ke results</h3>'+(S.results.length?'<ul class="list">'+S.results.slice().sort(byNew).map(r=>'<li class="card"><div class="row"><strong>'+esc(r.name)+'</strong>'+delBtn('results',r.id)+'</div><p class="small muted">'+esc(r.exam)+' · '+esc(r.marks)+'</p>'+photos(r.photoIds)+'</li>').join('')+'</ul>':empty('Koi result nahi.'))+'</section>',
+    +'<section class="block"><h3>Abhi ke results</h3>'+(S.results.length?'<ul class="list">'+S.results.slice().sort(byNew).map(r=>'<li class="card"><div class="row"><strong>'+esc(r.name)+'</strong>'+delBtn('results',r.id)+'</div><p class="small muted">'+esc(r.exam)+' · '+esc(r.marks)+'</p>'+photos(r.photoIds)+'<div class="actions">'+shareBtn('results',r)+'</div></li>').join('')+'</ul>':empty('Koi result nahi.'))+'</section>',
   set:()=>'<section class="block"><h3>Coaching ki details</h3><form data-form="saveinfo">'
     +'<div class="field"><label for="s-a">Coaching ke baare mein</label><textarea id="s-a" name="about">'+esc(S.info.about||DEFAULT_ABOUT)+'</textarea></div>'
     +'<div class="field"><label for="s-p">Phone / WhatsApp number (91 ke saath)</label><input id="s-p" name="phone" type="tel" inputmode="numeric" value="'+esc(S.info.phone)+'" autocomplete="off"></div>'
@@ -403,9 +421,22 @@ function render(keep){
   if(S.view==='admin'&&!S.admin)S.view='login';
   $('#root').innerHTML=S.view==='login'?vLogin():S.view==='admin'?vAdmin():vSite();
   if(st)restore(st);
-  window.scrollTo(0,y);hydrate();
+  window.scrollTo(0,y);hydrate();focusItem();
 }
 const soft=()=>render(true);
+function focusItem(){
+  if(S.focusDone||!S.focusId||S.view!=='site')return;
+  const el=document.getElementById('it-'+S.focusId);
+  if(el){S.focusDone=true;el.scrollIntoView({block:'center'});return}
+  const key={work:'work',notices:'notices',batches:'batches',results:'results',gallery:'gallery'}[S.tab];
+  if(key&&S.loaded[key]){S.focusDone=true;toast('Ye cheez ab website par nahi hai.')}
+}
+function applyHash(){
+  const m=/^#(work|notices|word|gallery|batches|results)(?:-([A-Za-z0-9_-]+))?$/.exec(location.hash);
+  if(!m)return false;
+  S.tab=m[1];S.focusId=m[2]||'';S.focusDone=!S.focusId;S.view='site';
+  return true;
+}
 
 /* ---------- live data ---------- */
 const err=()=>toast('Data nahi mil raha. Internet check karo.');
@@ -508,7 +539,7 @@ document.addEventListener('change',e=>{
 /* ---------- clicks ---------- */
 const COLS={work:'work',notices:'notices',batches:'batches',results:'results',subjects:'subjects',gallery:'gallery'};
 const A={
-  tab(el){S.tab=el.dataset.tab;S.confirm='';render(false);if(S.tab==='word')checkMine()},
+  tab(el){S.tab=el.dataset.tab;S.confirm='';S.focusId='';S.focusDone=true;render(false);if(S.tab==='word')checkMine()},
   atab(el){S.atab=el.dataset.id;S.confirm='';render(false)},
   filter(el){S.subFilter=el.dataset.id;render(false)},
   async mark(el){
@@ -546,8 +577,8 @@ document.addEventListener('click',e=>{
   const a=A[el.dataset.act];if(a)a(el);
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#lb').hidden)A.closelb()});
-window.addEventListener('hashchange',()=>{if(location.hash==='#teacher'){S.view=S.admin?'admin':'login';render(false)}});
-if(location.hash==='#teacher')S.view='login';
+window.addEventListener('hashchange',()=>{if(location.hash==='#teacher'){S.view=S.admin?'admin':'login';render(false)}else if(applyHash()){render(false);if(S.tab==='word')checkMine()}});
+if(location.hash==='#teacher')S.view='login';else applyHash();
 render(false);
 checkMine();
 </script>
