@@ -61,6 +61,10 @@ a{color:inherit}
 .adminbtn{background:transparent;color:var(--board-ink);border:1.5px solid var(--board-ink);border-radius:8px;min-height:38px;padding:0 14px;font:700 14px var(--font-body);cursor:pointer}
 .adminbtn:hover{background:rgba(255,255,255,.12)}
 
+.hbtns{display:flex;flex-direction:column;gap:8px;min-width:150px}
+.hbtns .adminbtn{width:100%}
+.adminbtn.fill{background:var(--chalk);color:var(--chalk-ink);border-color:var(--chalk)}
+.adminbtn.fill:hover{background:var(--chalk)}
 .welcome{padding-block:22px 4px;display:flex;flex-direction:column;gap:14px}
 .counters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .counter{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center}
@@ -265,7 +269,7 @@ async function uploadPending(key){
 const delBtn=(type,id)=>{const k=type+':'+id,on=S.confirm===k;return '<button type="button" class="btn sm '+(on?'danger':'ghost')+'" data-act="del" data-type="'+type+'" data-id="'+id+'">'+(on?'Pakka hatao?':'Hatao')+'</button>'};
 const subjOpts=(sel,all)=>(all?'<option value="all"'+(sel==='all'?' selected':'')+'>Sab subjects</option>':'')+(S.subjects.length?S.subjects.map(s=>'<option'+(s.name===sel?' selected':'')+'>'+esc(s.name)+'</option>').join(''):(all?'':'<option>General</option>'));
 const wordCard=w=>'<div class="board"><p class="label">Aaj ka word · '+fmt(w.at)+'</p><p class="bigword">'+esc(w.word)+'</p><p class="meaning">'+esc(w.meaning)+'</p><p class="ex">Example: '+esc(w.example)+'</p>'+photos(w.photoIds)+'</div>';
-const header=btn=>'<header class="top"><div class="wrap"><div class="brandrow"><img class="logo" src="'+LOGO+'" alt="Arora Classes logo"><div><h1 class="brand">Arora Classes</h1><p class="sub">Coaching class management</p></div></div><div class="hrow"><p class="tag">Knowledge · Practice · Progress</p>'+(btn?'<button type="button" class="adminbtn" data-act="adminopen">'+(S.admin?'Admin Panel':'Admin Login')+'</button>':'')+'</div></div></header>';
+const header=btn=>'<header class="top"><div class="wrap"><div class="brandrow"><img class="logo" src="'+LOGO+'" alt="Arora Classes logo"><div><h1 class="brand">Arora Classes</h1><p class="sub">Coaching class management</p></div></div><div class="hrow"><p class="tag">Knowledge · Practice · Progress</p>'+(btn?'<div class="hbtns"><button type="button" class="adminbtn fill" data-act="share" data-kind="site" data-id="">Website share karo</button><button type="button" class="adminbtn" data-act="adminopen">'+(S.admin?'Admin Panel':'Admin Login')+'</button></div>':'')+'</div></div></header>';
 const footer=()=>'<footer class="foot"><div class="wrap"><p class="eyebrow">Records</p><p><strong>Arora Classes</strong></p><p class="small">Class ki jaankari cloud se update hoti hai.</p></div></footer>';
 const subId=(wid,name)=>wid+'__'+encodeURIComponent(name.trim().toLowerCase().replace(/\s+/g,' ')).replace(/%/g,'_');
 const SITE='https://aroraclasses19.github.io/';
@@ -282,7 +286,7 @@ function shareText(kind,it){
   else m='*Arora Classes*\nDaily Work, notice, Daily Word, photo, batch aur fees ek hi jagah. Roz shaam 4 se 5 baje.';
   return m+'\n\n'+link;
 }
-const shareBtn=(kind,it,cls,label)=>'<a class="btn '+(cls||'ghost')+' sm" href="https://wa.me/?text='+encodeURIComponent(shareText(kind,it))+'" target="_blank" rel="noopener">'+(label||'WhatsApp par share')+'</a>';
+const shareBtn=(kind,it,cls,label)=>'<button type="button" class="btn '+(cls||'ghost')+' sm" data-act="share" data-kind="'+kind+'" data-id="'+esc(it&&it.id||'')+'">'+(label||'Share karo')+'</button>';
 const cardId=id=>' id="it-'+esc(id)+'" class="card'+(S.focusId===id?' hl':'')+'"';
 
 /* ---------- student views ---------- */
@@ -334,7 +338,7 @@ function siteTab(){
 function vSite(){
   const tabs=STABS.map(t=>'<button type="button" class="tab"'+(S.tab===t[0]?' aria-current="page"':'')+' data-act="tab" data-tab="'+t[0]+'">'+t[1]+'</button>').join('');
   return header(true)
-  +'<div class="wrap welcome"><h2>Namaste, Arora Classes mein aapka swagat hai.</h2><p class="lead">'+esc(S.info.about||DEFAULT_ABOUT)+'</p><span class="timing">Roz 4:00 – 5:00 PM</span><div class="actions">'+shareBtn('site',null,'ghost','Website WhatsApp par share karo')+'</div>'
+  +'<div class="wrap welcome"><h2>Namaste, Arora Classes mein aapka swagat hai.</h2><p class="lead">'+esc(S.info.about||DEFAULT_ABOUT)+'</p><span class="timing">Roz 4:00 – 5:00 PM</span>'
   +'<div class="counters"><div class="counter"><b>'+S.work.length+'</b><span>Daily Work</span></div><div class="counter"><b>'+S.notices.length+'</b><span>Notice</span></div><div class="counter"><b>'+S.results.length+'</b><span>Result</span></div></div></div>'
   +'<nav class="tabs" aria-label="Menu"><div class="wrap tabrow">'+tabs+'</div></nav>'
   +'<main class="wrap">'+siteTab()+'</main>'+footer();
@@ -561,6 +565,19 @@ const A={
   rmphoto(el){const k=el.dataset.key;(S.pend[k]||[]).splice(+el.dataset.i,1);const box=$('#th-'+k);if(box)box.innerHTML=thumbs(k)},
   zoom(el){const im=el.querySelector('img');if(!im||!im.src)return;$('#lb img').src=im.src;$('#lb').hidden=false},
   closelb(){$('#lb').hidden=true;$('#lb img').removeAttribute('src')},
+  async share(el){
+    const kind=el.dataset.kind,id=el.dataset.id;
+    const pool={work:S.work,notices:S.notices,gallery:S.posts,batches:S.batches,results:S.results};
+    const it=kind==='word'?S.word:kind==='site'?null:(pool[kind]||[]).find(x=>x.id===id);
+    if(kind!=='site'&&!it){toast('Ye cheez nahi mili.');return}
+    const msg=shareText(kind,it);
+    if(navigator.share){
+      try{await navigator.share({text:msg});return}
+      catch(e){if(e&&e.name==='AbortError')return}
+    }
+    window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank','noopener');
+    try{await navigator.clipboard.writeText(msg);toast('Message copy ho gaya. WhatsApp khul raha hai.')}catch(e){}
+  },
   adminopen(){S.view=S.admin?'admin':'login';S.confirm='';render(false);window.scrollTo(0,0)},
   site(){S.view='site';S.confirm='';render(false);window.scrollTo(0,0)},
   async logout(){try{await AU.signOut(auth)}catch(e){}S.view='site';render(false);window.scrollTo(0,0)},
