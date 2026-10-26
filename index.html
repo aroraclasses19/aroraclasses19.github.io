@@ -254,6 +254,10 @@ const CFG={
   appId:"1:836315757279:web:5d082f3c9468bb59e1876a"
 };
 const ADMIN_UID='xKe6w1vmRLgQ8pKGFNTthEsgiTE2';
+const UDOM='@aroraclasses.app';
+const uname=s=>String(s||'').trim().toLowerCase();
+const toEmail=s=>{s=String(s||'').trim();return s.includes('@')?s:uname(s)+UDOM};
+const shownName=e=>String(e||'').endsWith(UDOM)?e.slice(0,-UDOM.length):e;
 const FBV='10.14.1',FBB='https://www.gstatic.com/firebasejs/'+FBV+'/';
 
 const $=s=>document.querySelector(s);
@@ -264,10 +268,10 @@ const lsGet=k=>{try{return localStorage.getItem(k)||''}catch(e){return ''}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 let tt;const toast=m=>{const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>{t.hidden=true},3500)};
 
-let AU,FS,auth,db;
+let AU,FA,FS,auth,db;
 try{
   const [A,a,f]=await Promise.all([import(FBB+'firebase-app.js'),import(FBB+'firebase-auth.js'),import(FBB+'firebase-firestore.js')]);
-  AU=a;FS=f;const app=A.initializeApp(CFG);auth=AU.getAuth(app);db=FS.getFirestore(app);
+  AU=a;FA=A;FS=f;const app=A.initializeApp(CFG);auth=AU.getAuth(app);db=FS.getFirestore(app);
 }catch(e){
   $('#root').innerHTML='<p class="boot">The website could not load. Check your internet and open the page again.</p>';
   throw e;
@@ -276,7 +280,7 @@ try{
 /* ---------- state ---------- */
 const S={
   view:'site',tab:'work',atab:'work',subFilter:'pending',confirm:'',myName:lsGet('arora-name'),
-  admin:false,email:'',pend:{},fSub:'all',fSort:'new',busy:false,focusId:'',focusDone:true,
+  admin:false,owner:false,email:'',admins:[],pend:{},fSub:'all',fSort:'new',busy:false,focusId:'',focusDone:true,
   work:[],notices:[],batches:[],results:[],subjects:[],posts:[],subs:[],
   info:{about:'',phone:'',address:'',map:''},word:null,mine:null,loaded:{}
 };
@@ -446,17 +450,17 @@ function vSite(){
 /* ---------- admin ---------- */
 function vLogin(){
   return header(false)+'<main class="wrap"><section class="block loginbox"><p class="eyebrow">Secure access</p><h2>Administrator Login</h2>'
-  +'<form data-form="login"><div class="field"><label for="l-e">Email</label><input id="l-e" name="email" type="email" required autocomplete="username" autocapitalize="none"></div>'
+  +'<form data-form="login"><div class="field"><label for="l-e">Username</label><input id="l-e" name="email" type="text" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"></div>'
   +'<div class="field"><label for="l-p">Password</label><input id="l-p" name="pw" type="password" required autocomplete="current-password"></div>'
   +'<button class="btn primary" type="submit">Sign in securely</button></form>'
   +'<div class="actions"><button type="button" class="btn ghost sm" data-act="site">Back to website</button><button type="button" class="btn ghost sm" data-act="forgot">Forgot password?</button></div></section></main>'+footer();
 }
-const ATABS=[['work','Daily Work'],['word','Daily Word'],['subs','Sentences'],['notices','Notices'],['gallery','Gallery'],['subjects','Subjects'],['results','Results'],['set','Settings']];
+const ATABS=[['work','Daily Work'],['word','Daily Word'],['subs','Sentences'],['notices','Notices'],['gallery','Gallery'],['subjects','Subjects'],['results','Results'],['set','Settings'],['admins','Admins']];
 const curSubs=()=>S.word?S.subs.filter(s=>s.wordId===S.word.id):[];
 const pendingCount=()=>curSubs().filter(s=>s.status==='pending').length;
 function vAdmin(){
-  const chips=ATABS.map(t=>{const c=t[0]==='subs'&&pendingCount()?'<span class="count">'+pendingCount()+'</span>':'';return '<button type="button" class="chip" aria-pressed="'+(S.atab===t[0])+'" data-act="atab" data-id="'+t[0]+'">'+t[1]+c+'</button>'}).join('');
-  return header(false)+'<main class="wrap"><section class="block"><p class="eyebrow">Login: '+esc(S.email)+'</p><h2>Manage your class</h2><p class="muted small">Only the authorised account can publish or change content.</p>'
+  const chips=ATABS.filter(t=>t[0]!=='admins'||S.owner).map(t=>{const c=t[0]==='subs'&&pendingCount()?'<span class="count">'+pendingCount()+'</span>':'';return '<button type="button" class="chip" aria-pressed="'+(S.atab===t[0])+'" data-act="atab" data-id="'+t[0]+'">'+t[1]+c+'</button>'}).join('');
+  return header(false)+'<main class="wrap"><section class="block"><p class="eyebrow">Login: '+esc(shownName(S.email))+'</p><h2>Manage your class</h2><p class="muted small">Only the authorised account can publish or change content.</p>'
   +'<div class="actions"><button type="button" class="btn ghost sm" data-act="site">View website</button><button type="button" class="btn ghost sm" data-act="logout">Logout</button></div>'
   +'<div class="counters"><div class="counter"><b>'+S.work.length+'</b><span>Daily Work</span></div><div class="counter"><b>'+S.notices.length+'</b><span>Notice</span></div><div class="counter"><b>'+pendingCount()+'</b><span>Sentences pending</span></div></div>'
   +'<div class="chips">'+chips+'</div></section>'+PANELS[S.atab]()+'</main>'+footer();
@@ -494,6 +498,11 @@ const PANELS={
     +'<div class="field"><label for="r-m">Marks</label><input id="r-m" name="marks" placeholder="46/50" required autocomplete="off"></div>'
     +photoField('results')+'<button class="btn primary" type="submit">Add result</button></form></section>'
     +'<section class="block"><h3>Current results</h3>'+(S.results.length?'<ul class="list">'+S.results.slice().sort(byNew).map(r=>'<li class="card"><div class="row"><strong>'+esc(r.name)+'</strong>'+delBtn('results',r.id)+'</div><p class="small muted">'+esc(r.exam)+' · '+esc(r.marks)+'</p>'+photos(r.photoIds)+'</li>').join('')+'</ul>':empty('No results.'))+'</section>',
+  admins:()=>S.owner?'<section class="block"><h3>Add a new admin</h3><p class="muted small">Make a username and password. Anyone who enters them on Admin Login can open this admin panel. Give them only to people you trust.</p><form data-form="addadmin">'
+    +'<div class="field"><label for="a-u">Username</label><input id="a-u" name="user" required minlength="3" maxlength="20" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="for example: teacher1"></div>'
+    +'<div class="field"><label for="a-p">Password</label><input id="a-p" name="pw" type="text" required minlength="6" maxlength="40" autocomplete="off" autocapitalize="none" placeholder="at least 6 characters"></div>'
+    +'<button class="btn primary" type="submit">Create admin</button></form></section>'
+    +'<section class="block"><h3>Current admins</h3>'+(S.admins.length?'<ul class="list">'+S.admins.map(a=>'<li class="card"><div class="row"><strong>'+esc(a.username||a.id)+'</strong>'+delBtn('admins',a.id)+'</div><p class="small muted">Added '+fmt(a.at)+'</p></li>').join('')+'</ul>':empty('No extra admins yet.'))+'<p class="small muted">Removing an admin stops their access at once. To change someone\'s password, remove them and create them again with a new password.</p></section>':'',
   set:()=>'<section class="block"><h3>Coaching details</h3><form data-form="saveinfo">'
     +'<div class="field"><label for="s-a">About the coaching</label><textarea id="s-a" name="about">'+esc(S.info.about||DEFAULT_ABOUT)+'</textarea></div>'
     +'<div class="field"><label for="s-p">Phone / WhatsApp number (with 91)</label><input id="s-p" name="phone" type="tel" inputmode="numeric" value="'+esc(S.info.phone)+'" autocomplete="off"></div>'
@@ -561,10 +570,17 @@ function syncSubs(){
   if(!key)return;
   unsubSubs=FS.onSnapshot(FS.query(FS.collection(db,'submissions'),FS.where('wordId','==',key)),s=>{S.subs=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.subs=true;soft()},err);
 }
-AU.onAuthStateChanged(auth,u=>{
-  const ok=!!u&&u.uid===ADMIN_UID;
-  if(u&&!ok){AU.signOut(auth);return}
-  S.admin=ok;S.email=ok?(u.email||''):'';
+let admUnsub=null;
+AU.onAuthStateChanged(auth,async u=>{
+  let ok=false,owner=false;
+  if(u){
+    owner=u.uid===ADMIN_UID;ok=owner;
+    if(!ok){try{const s=await FS.getDoc(FS.doc(db,'admins',u.uid));ok=s.exists()}catch(e){ok=false}}
+    if(!ok){AU.signOut(auth);toast('This account is not allowed to open the admin panel.');}
+  }
+  S.admin=ok;S.owner=ok&&owner;S.email=ok?(u.email||''):'';
+  if(admUnsub){admUnsub();admUnsub=null}
+  if(S.owner)admUnsub=FS.onSnapshot(FS.collection(db,'admins'),s=>{S.admins=s.docs.map(d=>({id:d.id,...d.data()}));soft()},()=>{});else S.admins=[];
   if(ok&&S.view==='login')S.view='admin';
   if(!ok&&S.view==='admin')S.view='site';
   syncSubs();render(true);
@@ -573,7 +589,7 @@ AU.onAuthStateChanged(auth,u=>{
 /* ---------- forms ---------- */
 const authMsg=e=>{
   const c=(e&&e.code)||'';
-  if(c.includes('invalid-credential')||c.includes('wrong-password')||c.includes('user-not-found')||c.includes('invalid-email'))return 'Email or password is wrong.';
+  if(c.includes('invalid-credential')||c.includes('wrong-password')||c.includes('user-not-found')||c.includes('invalid-email'))return 'Username or password is wrong.';
   if(c.includes('too-many-requests'))return 'Too many wrong attempts. Please try again later.';
   if(c.includes('network'))return 'No internet connection.';
   return 'Could not log in. Please try again.';
@@ -596,7 +612,25 @@ const H={
     }catch(e){toast('Could not send the sentence. Check your internet and send again.');return}
     render(false);
   },
-  async login(d){try{await AU.signInWithEmailAndPassword(auth,d.email.trim(),d.pw)}catch(e){toast(authMsg(e))}},
+  async addadmin(d){
+    if(!S.owner){toast('Only the owner can add admins.');return}
+    const u=uname(d.user),pw=d.pw||'';
+    if(!/^[a-z0-9._-]{3,20}$/.test(u)){toast('Username: 3 to 20 letters or numbers (a-z, 0-9, . _ -).');return}
+    if(pw.length<6){toast('Password must be at least 6 characters.');return}
+    if(S.admins.some(a=>a.username===u)){toast('This username already exists.');return}
+    let app2;try{app2=FA.initializeApp(CFG,'second')}catch(e){app2=FA.getApp('second')}
+    const a2=AU.getAuth(app2);
+    try{
+      const r=await AU.createUserWithEmailAndPassword(a2,u+UDOM,pw);
+      await FS.setDoc(FS.doc(db,'admins',r.user.uid),{username:u,at:Date.now()});
+      try{await AU.signOut(a2)}catch(e){}
+    }catch(e){
+      const c=(e&&e.code)||'';
+      toast(c.includes('email-already-in-use')?'This username is already taken. Choose another.':c.includes('weak-password')?'Password is too weak.':permMsg(e));return;
+    }
+    toast('Admin created. Username: '+u);render(false);
+  },
+  async login(d){try{await AU.signInWithEmailAndPassword(auth,toEmail(d.email),d.pw)}catch(e){toast(authMsg(e))}},
   async addwork(d){const ids=await uploadPending('work');await FS.addDoc(col('work'),{subject:d.subject,title:d.title.trim(),text:d.text.trim(),photoIds:ids,at:Date.now()});S.pend.work=[];toast('Daily Work posted.');render(false)},
   async setword(d){const ids=await uploadPending('word');const old=S.subs.slice();await FS.setDoc(FS.doc(db,'site','word'),{id:'w'+Date.now(),word:d.word.trim(),meaning:d.meaning.trim(),example:d.example.trim(),photoIds:ids,at:Date.now()});for(const o of old){try{await FS.deleteDoc(FS.doc(db,'submissions',o.id))}catch(e){}}S.pend.word=[];S.subFilter='pending';toast('New word is set. Old answers are cleared.');render(false)},
   async addnotice(d){const ids=await uploadPending('notices');await FS.addDoc(col('notices'),{text:d.text.trim(),photoIds:ids,at:Date.now()});S.pend.notices=[];toast('Notice posted.');render(false)},
@@ -624,7 +658,7 @@ document.addEventListener('change',e=>{
 });
 
 /* ---------- clicks ---------- */
-const COLS={work:'work',notices:'notices',results:'results',subjects:'subjects',gallery:'gallery',submissions:'submissions'};
+const COLS={admins:'admins',work:'work',notices:'notices',results:'results',subjects:'subjects',gallery:'gallery',submissions:'submissions'};
 const A={
   tab(el){S.tab=el.dataset.tab;S.confirm='';S.focusId='';S.focusDone=true;render(false)},
   speak(el){
@@ -647,7 +681,7 @@ const A={
     const type=el.dataset.type,id=el.dataset.id,k=type+':'+id;
     if(S.confirm!==k){S.confirm=k;render(true);return}
     S.confirm='';
-    const item=(type==='gallery'?S.posts:type==='submissions'?S.subs:S[type]).find(x=>x.id===id);
+    const item=(type==='gallery'?S.posts:type==='submissions'?S.subs:S[type])&&(type==='gallery'?S.posts:type==='submissions'?S.subs:S[type]).find(x=>x.id===id);
     try{
       for(const p of (item&&item.photoIds)||[]){await FS.deleteDoc(FS.doc(db,'gallery',p));pp.delete(p)}
       await FS.deleteDoc(FS.doc(db,COLS[type],id));toast('Deleted.');
@@ -677,6 +711,7 @@ const A={
     let em=S.email;
     if(!em){const i=$('#l-e');em=i?i.value.trim():''}
     if(!em){toast('Please enter your email above first.');return}
+    if(!em.includes('@')||em.endsWith(UDOM)){toast('Password reset by email works only for the owner email account. Ask the owner for a new password.');return}
     try{await AU.sendPasswordResetEmail(auth,em);toast('Email sent. Please check your inbox.')}catch(e){toast('Could not send the email. Check the email address.')}
   }
 };
