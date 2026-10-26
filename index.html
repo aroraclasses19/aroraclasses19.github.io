@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#123C2D">
 <title>Arora Classes</title>
-<meta name="description" content="Arora Classes: Daily Work, notices, Daily Word, photos, batches and fees in one place. Daily 4 to 5 PM.">
+<meta name="description" content="Arora Classes: Daily Work, notices, Daily Word, photos and results in one place. Daily 4 to 5 PM.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Arora Classes">
 <meta property="og:title" content="Arora Classes">
-<meta property="og:description" content="Daily Work, notices, Daily Word, photos, batches and fees in one place. Daily 4 to 5 PM.">
+<meta property="og:description" content="Daily Work, notices, Daily Word, photos and results in one place. Daily 4 to 5 PM.">
 <meta property="og:url" content="https://aroraclasses19.github.io/">
 <meta property="og:image" content="https://aroraclasses19.github.io/logo.jpg">
 <meta property="og:image:type" content="image/jpeg">
@@ -153,6 +153,64 @@ textarea{min-height:96px;resize:vertical}
 .board .actions{margin-top:12px}
 .boot{padding:40px 16px;text-align:center;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.tab,.btn,.chip,.adminbtn{transition:background .15s,color .15s}}
+
+/* ===== v9 design refresh ===== */
+:root{--r:16px;--shadow:0 1px 2px rgba(18,32,28,.06),0 6px 18px rgba(18,32,28,.07)}
+body{background:linear-gradient(180deg,#E6EFE9 0,var(--bg) 340px) fixed}
+@media (prefers-color-scheme: dark){body{background:var(--bg)}}
+.top{background-color:var(--board);background-image:radial-gradient(120% 140% at 100% 0,rgba(227,168,43,.28) 0,transparent 55%),linear-gradient(160deg,#0F3326 0,#17503B 100%);border-bottom-left-radius:26px;border-bottom-right-radius:26px;box-shadow:0 10px 28px rgba(15,51,38,.25)}
+.top .wrap{padding-block:22px 26px;gap:16px}
+.logo{width:64px;height:64px;border-radius:18px;box-shadow:0 0 0 3px rgba(255,255,255,.22),0 6px 16px rgba(0,0,0,.28)}
+.brand{font-size:clamp(1.8rem,8vw,2.5rem)}
+.tag{font-size:.85rem;opacity:.85;letter-spacing:.04em}
+.adminbtn{border-radius:999px;min-height:42px;padding:0 20px;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.55)}
+.adminbtn:hover{background:rgba(255,255,255,.22)}
+.welcome{padding-block:24px 0;gap:16px}
+.welcome h2{font-size:clamp(1.5rem,6.5vw,2rem);letter-spacing:-.01em}
+.lead{color:var(--muted);line-height:1.6}
+.timing{border-radius:999px;padding:7px 16px 7px 14px;box-shadow:0 4px 12px rgba(227,168,43,.35)}
+.timing::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--chalk-ink);margin-right:9px;opacity:.7;vertical-align:1px}
+.counters,.stats3{gap:10px}
+.counter{border-radius:var(--r);box-shadow:var(--shadow);border:0;padding:14px 8px;border-top:4px solid var(--chalk)}
+.counter:nth-child(2){border-top-color:#2E8B62}.counter:nth-child(3){border-top-color:#3E6FB0}
+.counter b{font-size:1.9rem}
+.tabs{margin-top:22px;border:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding-block:8px}
+.tabrow{gap:8px;padding-bottom:2px}
+.tab{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 18px;font-size:15px}
+.tab[aria-current="page"]{background:var(--board);color:var(--board-ink);border-color:var(--board);box-shadow:0 4px 12px rgba(15,51,38,.25)}
+main{padding-block:18px 16px;gap:26px}
+.block h2{display:flex;align-items:center;gap:8px;font-size:1.4rem}
+.card{border-radius:var(--r);border:0;box-shadow:var(--shadow);padding:16px 18px}
+.card h3{font-size:1.1rem}
+.pill{background:#E4EFE9;color:var(--board)}
+@media (prefers-color-scheme: dark){.pill{background:#1E3A30;color:var(--board-ink)}}
+.board{border-radius:20px;padding:22px 20px 24px;background-image:radial-gradient(90% 120% at 100% 0,rgba(227,168,43,.25) 0,transparent 55%),linear-gradient(160deg,#0F3326 0,#17503B 100%);box-shadow:0 12px 28px rgba(15,51,38,.28)}
+.bigword{font-size:clamp(2.6rem,13vw,3.8rem);letter-spacing:-.01em}
+.meaning{font-size:1.6rem}
+.ex{font-style:italic;opacity:.92}
+.btn{border-radius:12px;min-height:48px}
+.btn.primary{background:linear-gradient(160deg,#17503B,#0F3326);box-shadow:0 6px 14px rgba(15,51,38,.28)}
+.btn.accent{box-shadow:0 6px 14px rgba(227,168,43,.35)}
+input,select,textarea{border-radius:12px;border:1.5px solid var(--line)}
+input:focus,select:focus,textarea:focus{border-color:var(--board)}
+.chip{border-radius:999px}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr)}
+.stat{border-radius:var(--r);border:0;box-shadow:var(--shadow);padding:12px 6px}
+.stat.good{background:var(--good-bg);color:var(--good)}.stat.bad{background:var(--bad-bg);color:var(--bad)}.stat.wait{background:var(--warn-bg);color:var(--warn-ink)}
+.stat.good span,.stat.bad span,.stat.wait span{color:inherit;opacity:.85;font-weight:600}
+.count2{display:inline-block;min-width:30px;padding:0 10px;border-radius:999px;background:var(--chalk);color:var(--chalk-ink);font:800 .95rem/28px var(--font-display);text-align:center}
+.card.ans{flex-direction:row;align-items:flex-start;gap:12px;border-left:5px solid var(--warn-ink)}
+.card.ans.sahi{border-left-color:var(--good)}.card.ans.galat{border-left-color:var(--bad)}.card.ans.pending{border-left-color:#E3A82B}
+.av{flex:none;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--board);color:var(--board-ink);font:800 1.1rem var(--font-display)}
+.card.ans.sahi .av{background:var(--good)}.card.ans.galat .av{background:var(--bad)}.card.ans.pending .av{background:#B8860B}
+.ansb{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.badge{border-radius:999px;padding:3px 11px}
+.done{display:flex;flex-direction:column;gap:2px;background:var(--good-bg);color:var(--good);border-radius:var(--r);padding:14px 16px}
+.done span{color:var(--ink);opacity:.85;font-size:.92rem}
+.contactwrap{padding-block:0 28px}
+.contactwrap .card{border-top:4px solid var(--chalk)}
+.empty{border-radius:var(--r);background:var(--surface);border:1.5px dashed var(--line)}
+@media (prefers-reduced-motion:no-preference){.card,.board,.counter{animation:rise .35s ease both}@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}}
 </style>
 </head>
 <body>
@@ -198,7 +256,7 @@ const S={
   work:[],notices:[],batches:[],results:[],subjects:[],posts:[],subs:[],
   info:{about:'',phone:'',address:''},word:null,mine:null,loaded:{}
 };
-const DEFAULT_ABOUT='Find Daily Work, notices, photos, batches and fees in one place. A new English word every day.';
+const DEFAULT_ABOUT='Find Daily Work, notices, photos and results in one place. A new English word every day.';
 const STATUS={pending:'Pending',sahi:'Correct ✓',galat:'Wrong ✗'};
 const empty=t=>'<div class="empty">'+esc(t)+'</div>';
 const byNew=(a,b)=>(b.at||0)-(a.at||0);
@@ -285,7 +343,7 @@ function shareText(kind,it){
   else if(kind==='gallery')m='*Arora Classes: Photo*'+(it.caption?'\n'+clip(it.caption,200):'');
   else if(kind==='batches')m='*Arora Classes: '+it.name+'*\nFees: ₹'+it.fee+' / mahina\nSeats: '+it.seats+(it.desc?'\n'+clip(it.desc,300):'')+'\nRoz shaam 4 se 5 baje';
   else if(kind==='results')m='*Arora Classes: Result*\n'+it.name+' | '+it.exam+' | '+it.marks;
-  else m='*Arora Classes*\nDaily Work, notices, Daily Word, photos, batches and fees in one place. Daily 4 to 5 PM.';
+  else m='*Arora Classes*\nDaily Work, notices, Daily Word, photos and results in one place. Daily 4 to 5 PM.';
   return m+'\n\n'+link;
 }
 const SHICON='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4"/></svg>';
@@ -293,35 +351,33 @@ const shareBtn=(kind,it,cls,label)=>'<button type="button" class="btn '+(cls||'g
 const cardId=id=>' id="it-'+esc(id)+'" class="card'+(S.focusId===id?' hl':'')+'"';
 
 /* ---------- student views ---------- */
-const STABS=[['work','Daily Work'],['notices','Notice Board'],['word','Daily Word'],['gallery','Gallery'],['batches','Batches'],['results','Results']];
+const STABS=[['work','Daily Work'],['notices','Notice Board'],['word','Daily Word'],['gallery','Gallery'],['results','Results']];
 function contact(){
   const ph=(S.info.phone||'').replace(/\D/g,'');
   return '<div class="card"><h3>Contact</h3><p>'+(S.info.phone?'Phone: <strong>'+esc(S.info.phone)+'</strong>':'<span class="muted">Phone number will be added soon.</span>')+'</p>'+(S.info.address?'<p>Address: '+esc(S.info.address)+'</p>':'')+(ph?'<div class="actions"><a class="btn accent sm" href="https://wa.me/'+ph+'" target="_blank" rel="noopener">Chat on WhatsApp</a></div>':'')+'</div>';
 }
-function vMine(){
+const initial=n=>esc((n||'?').trim().charAt(0).toUpperCase());
+const mySent=()=>{
+  if(!S.word)return false;
+  if(lsGet('arora-sent-'+S.word.id))return true;
   const nm=S.myName.trim();
-  let body='';
-  if(nm&&S.word){
-    const m=S.mine;
-    if(!m)body='<p class="muted">Checking…</p>';
-    else if(m.err)body=empty('Result is not available right now. Please try again in a while.');
-    else if(m.none)body=empty('You have not sent a sentence for this word yet.');
-    else{
-      const msg={pending:'The teacher will check it soon.',sahi:'Correct. Well done!',galat:'Wrong. Please try again.'};
-      body='<ul class="list"><li class="card"><div class="row"><strong>'+esc(m.word)+'</strong><span class="badge '+esc(m.status)+'">'+(STATUS[m.status]||'')+'</span></div><p class="sentence">'+esc(m.sentence)+'</p><p class="small muted">'+(msg[m.status]||'')+'</p></li></ul>';
-    }
-  }
-  return '<section class="block"><h2>My result</h2><p class="muted">Enter your name to see whether the teacher marked your sentence correct or wrong.</p>'
-  +'<form data-form="mine"><div class="field"><label for="m-n">Your name</label><input id="m-n" name="name" maxlength="40" value="'+esc(S.myName)+'" required autocomplete="off"></div><button class="btn ghost" type="submit">See result</button></form>'+body+'</section>';
+  return !!nm&&S.subs.some(s=>s.id===subId(S.word.id,nm));
+};
+function answers(){
+  const all=curSubs().slice().sort(byNew),n=st=>all.filter(s=>s.status===st).length;
+  const stats='<div class="stats3"><div class="stat good"><b>'+n('sahi')+'</b><span>Correct</span></div><div class="stat bad"><b>'+n('galat')+'</b><span>Wrong</span></div><div class="stat wait"><b>'+n('pending')+'</b><span>Pending</span></div></div>';
+  const list=all.length?'<ul class="list">'+all.map(s=>'<li class="card ans '+esc(s.status)+'"><div class="av" aria-hidden="true">'+initial(s.student)+'</div><div class="ansb"><div class="row"><strong>'+esc(s.student)+'</strong><span class="badge '+esc(s.status)+'">'+(STATUS[s.status]||'')+'</span></div><p class="sentence">'+esc(s.sentence)+'</p></div></li>').join('')+'</ul>':empty(S.loaded.subs?'No answers yet. Be the first to send one!':'Loading…');
+  return '<section class="block"><h2>Answers for this word <span class="count2">'+all.length+'</span></h2>'+stats+list+'</section>';
 }
 function vWord(){
   if(!S.word)return '<section class="block"><h2>Daily Word</h2>'+empty('The word of the day has not been added yet.')+'</section>';
-  const sent=S.mine&&!S.mine.none&&!S.mine.err;
-  return '<section class="block"><h2>Daily Word</h2>'+wordCard(S.word)+'</section>'
-  +(sent?'':'<section class="block"><h2>Make your own sentence</h2><p class="muted">Write one sentence of your own using this word. You can send only one sentence per word, so write it carefully.</p>'
-  +'<form data-form="sentence"><div class="field"><label for="f-sn">Your name</label><input id="f-sn" name="student" maxlength="40" value="'+esc(S.myName)+'" required autocomplete="off"></div>'
-  +'<div class="field"><label for="f-ss">Your sentence</label><textarea id="f-ss" name="sentence" maxlength="300" placeholder="Write your sentence in English here" required></textarea></div>'
-  +'<button class="btn primary" type="submit">Send sentence</button></form></section>')+vMine();
+  const form=mySent()
+    ?'<div class="done"><b>✓ Your sentence is sent.</b><span>The teacher will check it. Your answer is in the list below.</span></div>'
+    :'<section class="block"><h2>Make your own sentence</h2><p class="muted">Write one sentence of your own using this word. You can send only one sentence per word, so write it carefully.</p>'
+    +'<form data-form="sentence"><div class="field"><label for="f-sn">Your name</label><input id="f-sn" name="student" maxlength="40" value="'+esc(S.myName)+'" required autocomplete="off"></div>'
+    +'<div class="field"><label for="f-ss">Your sentence</label><textarea id="f-ss" name="sentence" maxlength="300" placeholder="Write your sentence in English here" required></textarea></div>'
+    +'<button class="btn primary" type="submit">Send sentence</button></form></section>';
+  return '<section class="block"><h2>Daily Word</h2>'+wordCard(S.word)+'</section>'+form+answers();
 }
 function siteTab(){
   const t=S.tab;
@@ -334,7 +390,6 @@ function siteTab(){
   if(t==='notices')return '<section class="block"><h2>Notice Board</h2>'+(S.notices.length?'<ul class="list">'+S.notices.slice().sort(byNew).map(n=>'<li'+cardId(n.id)+'><p>'+esc(n.text)+'</p>'+photos(n.photoIds)+'<p class="small muted">'+fmt(n.at)+'</p></li>').join('')+'</ul>':empty(S.loaded.notices?'No notices yet.':'Loading…'))+'</section>';
   if(t==='word')return vWord();
   if(t==='gallery')return '<section class="block"><h2>Gallery</h2>'+(S.posts.length?'<ul class="list">'+S.posts.slice().sort(byNew).map(g=>'<li'+cardId(g.id)+'>'+(g.caption?'<h3>'+esc(g.caption)+'</h3>':'')+photos(g.photoIds,true)+'<p class="small muted">'+fmt(g.at)+'</p></li>').join('')+'</ul>':empty(S.loaded.gallery?'Photos coming soon.':'Loading…'))+'</section>';
-  if(t==='batches')return '<section class="block"><h2>Batches and fees</h2>'+(S.batches.length?'<ul class="list">'+S.batches.slice().sort((a,b)=>(a.at||0)-(b.at||0)).map(b=>'<li'+cardId(b.id)+'><div class="row"><h3>'+esc(b.name)+'</h3><span class="fee">₹'+esc(b.fee)+'<span class="small muted"> / month</span></span></div><div class="meta"><span>Daily 4–5 PM</span><span>'+esc(b.seats)+' seats</span></div>'+(b.desc?'<p>'+esc(b.desc)+'</p>':'')+photos(b.photoIds)+'</li>').join('')+'</ul>':empty(S.loaded.batches?'Batches will be added soon.':'Loading…'))+contact()+'</section>';
   if(t==='results')return '<section class="block"><h2>Results</h2>'+(S.results.length?'<ul class="list">'+S.results.slice().sort(byNew).map(r=>'<li'+cardId(r.id)+'><div class="row"><h3>'+esc(r.name)+'</h3><span class="marks">'+esc(r.marks)+'</span></div><p class="small muted">'+esc(r.exam)+'</p>'+photos(r.photoIds)+'</li>').join('')+'</ul>':empty(S.loaded.results?'Results coming soon.':'Loading…'))+'</section>';
   return '';
 }
@@ -344,7 +399,7 @@ function vSite(){
   +'<div class="wrap welcome"><h2>Welcome to Arora Classes.</h2><p class="lead">'+esc(S.info.about||DEFAULT_ABOUT)+'</p><span class="timing">Daily 4:00 – 5:00 PM</span>'
   +'<div class="counters"><div class="counter"><b>'+S.work.length+'</b><span>Daily Work</span></div><div class="counter"><b>'+S.notices.length+'</b><span>Notice</span></div><div class="counter"><b>'+S.results.length+'</b><span>Result</span></div></div></div>'
   +'<nav class="tabs" aria-label="Menu"><div class="wrap tabrow">'+tabs+'</div></nav>'
-  +'<main class="wrap">'+siteTab()+'</main>'+footer();
+  +'<main class="wrap">'+siteTab()+'</main><div class="wrap contactwrap">'+contact()+'</div>'+footer();
 }
 
 /* ---------- admin ---------- */
@@ -355,7 +410,7 @@ function vLogin(){
   +'<button class="btn primary" type="submit">Sign in securely</button></form>'
   +'<div class="actions"><button type="button" class="btn ghost sm" data-act="site">Back to website</button><button type="button" class="btn ghost sm" data-act="forgot">Forgot password?</button></div></section></main>'+footer();
 }
-const ATABS=[['work','Daily Work'],['word','Daily Word'],['subs','Sentences'],['notices','Notices'],['gallery','Gallery'],['subjects','Subjects'],['batches','Batches'],['results','Results'],['set','Settings']];
+const ATABS=[['work','Daily Work'],['word','Daily Word'],['subs','Sentences'],['notices','Notices'],['gallery','Gallery'],['subjects','Subjects'],['results','Results'],['set','Settings']];
 const curSubs=()=>S.word?S.subs.filter(s=>s.wordId===S.word.id):[];
 const pendingCount=()=>curSubs().filter(s=>s.status==='pending').length;
 function vAdmin(){
@@ -384,7 +439,7 @@ const PANELS={
     const list=all.filter(s=>S.subFilter==='all'||s.status===S.subFilter).sort(byNew);
     const f=[['pending','Pending'],['sahi','Correct'],['galat','Wrong'],['all','All']].map(x=>'<button type="button" class="chip" aria-pressed="'+(S.subFilter===x[0])+'" data-act="filter" data-id="'+x[0]+'">'+x[1]+'</button>').join('');
     return '<section class="block"><h3>Word: '+esc(S.word.word)+' ('+esc(S.word.meaning)+')</h3><div class="stats"><div class="stat"><b>'+all.length+'</b><span>Received</span></div><div class="stat"><b>'+n('pending')+'</b><span>Pending</span></div><div class="stat"><b>'+n('sahi')+'</b><span>Correct</span></div><div class="stat"><b>'+n('galat')+'</b><span>Wrong</span></div></div><div class="chips">'+f+'</div>'
-    +(list.length?'<ul class="list">'+list.map(s=>'<li class="card"><div class="row"><strong>'+esc(s.student)+'</strong><span class="badge '+esc(s.status)+'">'+(STATUS[s.status]||'')+'</span></div><p class="sentence">'+esc(s.sentence)+'</p><div class="actions"><button type="button" class="btn sm '+(s.status==='sahi'?'on-good':'ghost')+'" data-act="mark" data-id="'+esc(s.id)+'" data-val="sahi">Correct ✓</button><button type="button" class="btn sm '+(s.status==='galat'?'on-bad':'ghost')+'" data-act="mark" data-id="'+esc(s.id)+'" data-val="galat">Wrong ✗</button></div></li>').join('')+'</ul>':empty('No sentences in this filter.'))+'</section>';
+    +(list.length?'<ul class="list">'+list.map(s=>'<li class="card"><div class="row"><strong>'+esc(s.student)+'</strong><span class="badge '+esc(s.status)+'">'+(STATUS[s.status]||'')+'</span></div><p class="sentence">'+esc(s.sentence)+'</p><div class="actions"><button type="button" class="btn sm '+(s.status==='sahi'?'on-good':'ghost')+'" data-act="mark" data-id="'+esc(s.id)+'" data-val="sahi">Correct ✓</button><button type="button" class="btn sm '+(s.status==='galat'?'on-bad':'ghost')+'" data-act="mark" data-id="'+esc(s.id)+'" data-val="galat">Wrong ✗</button>'+delBtn('submissions',s.id)+'</div></li>').join('')+'</ul>':empty('No sentences in this filter.'))+'</section>';
   },
   notices:()=>'<section class="block"><h3>New notice</h3><form data-form="addnotice"><div class="field"><label for="n-t">Write notice</label><textarea id="n-t" name="text" required></textarea></div>'+photoField('notices')+'<button class="btn primary" type="submit">Post notice</button></form></section>'
     +'<section class="block"><h3>Posted notices</h3>'+(S.notices.length?'<ul class="list">'+S.notices.slice().sort(byNew).map(n=>'<li class="card"><p>'+esc(n.text)+'</p>'+photos(n.photoIds)+'<div class="row"><span class="small muted">'+fmt(n.at)+'</span>'+delBtn('notices',n.id)+'</div></li>').join('')+'</ul>':empty('No notices.'))+'</section>',
@@ -392,13 +447,6 @@ const PANELS={
     +'<section class="block"><h3>Gallery photos</h3>'+(S.posts.length?'<ul class="list">'+S.posts.slice().sort(byNew).map(g=>'<li class="card"><div class="row"><strong>'+esc(g.caption||'No caption')+'</strong>'+delBtn('gallery',g.id)+'</div>'+photos(g.photoIds)+'</li>').join('')+'</ul>':empty('No photos yet.'))+'</section>',
   subjects:()=>'<section class="block"><h3>Add new subject</h3><form data-form="addsubject"><div class="field"><label for="u-n">Subject name</label><input id="u-n" name="name" required autocomplete="off"></div><button class="btn primary" type="submit">Add subject</button></form></section>'
     +'<section class="block"><h3>Current subjects</h3>'+(S.subjects.length?'<ul class="list">'+S.subjects.map(s=>'<li class="card"><div class="row"><strong>'+esc(s.name)+'</strong>'+delBtn('subjects',s.id)+'</div></li>').join('')+'</ul>':empty('No subjects yet. Add a subject first (like Maths, English), then you can pick it in Daily Work.'))+'</section>',
-  batches:()=>'<section class="block"><h3>Add new batch</h3><form data-form="addbatch">'
-    +'<div class="field"><label for="b-n">Batch name</label><input id="b-n" name="name" required autocomplete="off"></div>'
-    +'<div class="field"><label for="b-f">Fees (₹ per month)</label><input id="b-f" name="fee" inputmode="numeric" required autocomplete="off"></div>'
-    +'<div class="field"><label for="b-s">Seats</label><input id="b-s" name="seats" inputmode="numeric" required autocomplete="off"></div>'
-    +'<div class="field"><label for="b-d">Details</label><textarea id="b-d" name="desc"></textarea></div>'
-    +photoField('batches')+'<button class="btn primary" type="submit">Add batch</button></form></section>'
-    +'<section class="block"><h3>Current batches</h3>'+(S.batches.length?'<ul class="list">'+S.batches.map(b=>'<li class="card"><div class="row"><strong>'+esc(b.name)+'</strong>'+delBtn('batches',b.id)+'</div><p class="small muted">₹'+esc(b.fee)+' · '+esc(b.seats)+' seats</p>'+photos(b.photoIds)+'</li>').join('')+'</ul>':empty('No batches.'))+'</section>',
   results:()=>'<section class="block"><h3>Add result</h3><form data-form="addresult">'
     +'<div class="field"><label for="r-n">Student name</label><input id="r-n" name="name" required autocomplete="off"></div>'
     +'<div class="field"><label for="r-e">Test name</label><input id="r-e" name="exam" required autocomplete="off"></div>'
@@ -435,11 +483,11 @@ function focusItem(){
   if(S.focusDone||!S.focusId||S.view!=='site')return;
   const el=document.getElementById('it-'+S.focusId);
   if(el){S.focusDone=true;el.scrollIntoView({block:'center'});return}
-  const key={work:'work',notices:'notices',batches:'batches',results:'results',gallery:'gallery'}[S.tab];
+  const key={work:'work',notices:'notices',results:'results',gallery:'gallery'}[S.tab];
   if(key&&S.loaded[key]){S.focusDone=true;toast('This item is no longer on the website.')}
 }
 function applyHash(){
-  const m=/^#(work|notices|word|gallery|batches|results)(?:-([A-Za-z0-9_-]+))?$/.exec(location.hash);
+  const m=/^#(work|notices|word|gallery|results)(?:-([A-Za-z0-9_-]+))?$/.exec(location.hash);
   if(!m)return false;
   S.tab=m[1];S.focusId=m[2]||'';S.focusDone=!S.focusId;S.view='site';
   return true;
@@ -450,35 +498,26 @@ const err=()=>toast('Could not load data. Check your internet.');
 function listen(name,key,onFirst){
   FS.onSnapshot(FS.collection(db,name),s=>{S[key]=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded[name]=true;soft()},err);
 }
-listen('work','work');listen('notices','notices');listen('batches','batches');listen('results','results');listen('subjects','subjects');
+listen('work','work');listen('notices','notices');listen('results','results');listen('subjects','subjects');
 FS.onSnapshot(FS.query(FS.collection(db,'gallery'),FS.where('type','==','post')),s=>{S.posts=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.gallery=true;soft()},err);
 FS.onSnapshot(FS.doc(db,'site','info'),s=>{S.info=Object.assign({about:'',phone:'',address:''},s.exists()?s.data():{});soft()},err);
 let lastWord='';
 FS.onSnapshot(FS.doc(db,'site','word'),s=>{
   S.word=s.exists()?s.data():null;
   const id=S.word?S.word.id:'';
-  if(id!==lastWord){lastWord=id;S.mine=null;checkMine();syncSubs()}
+  if(id!==lastWord){lastWord=id;syncSubs()}
   soft();
 },err);
-setTimeout(()=>{['work','notices','batches','results','gallery'].forEach(k=>S.loaded[k]=true);soft()},6000);
+setTimeout(()=>{['work','notices','results','gallery','subs'].forEach(k=>S.loaded[k]=true);soft()},6000);
 
-let mineTok=0;
-async function checkMine(){
-  const nm=S.myName.trim();
-  if(!S.word||!nm){S.mine=null;soft();return}
-  const t=++mineTok;
-  try{const s=await FS.getDoc(FS.doc(db,'submissions',subId(S.word.id,nm)));if(t!==mineTok)return;S.mine=s.exists()?s.data():{none:true}}
-  catch(e){if(t!==mineTok)return;S.mine={err:true}}
-  soft();
-}
 let unsubSubs=null,subsKey='';
 function syncSubs(){
-  const key=S.admin&&S.word?S.word.id:'';
+  const key=S.word?S.word.id:'';
   if(key===subsKey)return;
   subsKey=key;if(unsubSubs){unsubSubs();unsubSubs=null}
-  S.subs=[];
+  S.subs=[];S.loaded.subs=!key;
   if(!key)return;
-  unsubSubs=FS.onSnapshot(FS.query(FS.collection(db,'submissions'),FS.where('wordId','==',key)),s=>{S.subs=s.docs.map(d=>({id:d.id,...d.data()}));soft()},err);
+  unsubSubs=FS.onSnapshot(FS.query(FS.collection(db,'submissions'),FS.where('wordId','==',key)),s=>{S.subs=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.subs=true;soft()},err);
 }
 AU.onAuthStateChanged(auth,u=>{
   const ok=!!u&&u.uid===ADMIN_UID;
@@ -502,29 +541,28 @@ const col=n=>FS.collection(db,n);
 const H={
   async sentence(d){
     if(!S.word){toast('There is no word right now.');return}
-    const name=d.student.trim(),sentence=d.sentence.trim();
+    const name=d.student.trim().replace(/\s+/g,' '),sentence=d.sentence.trim();
     if(!name||!sentence)return;
-    S.myName=name;lsSet('arora-name',name);
-    const ref=FS.doc(db,'submissions',subId(S.word.id,name));
+    const id=subId(S.word.id,name),ref=FS.doc(db,'submissions',id);
+    if(S.subs.some(x=>x.id===id)){toast('A sentence has already been sent with this name.');return}
     try{
       const ex=await FS.getDoc(ref);
-      if(ex.exists()){toast('A sentence has already been sent with this name.');await checkMine();return}
+      if(ex.exists()){toast('A sentence has already been sent with this name.');return}
       await FS.setDoc(ref,{wordId:S.word.id,word:S.word.word,student:name,sentence,status:'pending',at:Date.now()});
+      S.myName=name;lsSet('arora-name',name);lsSet('arora-sent-'+S.word.id,name);
       toast('Sentence sent. The teacher will check it.');
     }catch(e){toast('Could not send the sentence. Check your internet and send again.');return}
-    await checkMine();
+    render(false);
   },
-  async mine(d){S.myName=d.name.trim();lsSet('arora-name',S.myName);S.mine=null;render(false);await checkMine()},
   async login(d){try{await AU.signInWithEmailAndPassword(auth,d.email.trim(),d.pw)}catch(e){toast(authMsg(e))}},
   async addwork(d){const ids=await uploadPending('work');await FS.addDoc(col('work'),{subject:d.subject,title:d.title.trim(),text:d.text.trim(),photoIds:ids,at:Date.now()});S.pend.work=[];toast('Daily Work posted.');render(false)},
-  async setword(d){const ids=await uploadPending('word');await FS.setDoc(FS.doc(db,'site','word'),{id:'w'+Date.now(),word:d.word.trim(),meaning:d.meaning.trim(),example:d.example.trim(),photoIds:ids,at:Date.now()});S.pend.word=[];S.subFilter='pending';toast('New word is set.');render(false)},
+  async setword(d){const ids=await uploadPending('word');const old=S.subs.slice();await FS.setDoc(FS.doc(db,'site','word'),{id:'w'+Date.now(),word:d.word.trim(),meaning:d.meaning.trim(),example:d.example.trim(),photoIds:ids,at:Date.now()});for(const o of old){try{await FS.deleteDoc(FS.doc(db,'submissions',o.id))}catch(e){}}S.pend.word=[];S.subFilter='pending';toast('New word is set. Old answers are cleared.');render(false)},
   async addnotice(d){const ids=await uploadPending('notices');await FS.addDoc(col('notices'),{text:d.text.trim(),photoIds:ids,at:Date.now()});S.pend.notices=[];toast('Notice posted.');render(false)},
   async addgallery(d){
     if(!(S.pend.gallery||[]).length){toast('Please choose a photo first.');return}
     const ids=await uploadPending('gallery');await FS.addDoc(col('gallery'),{type:'post',caption:d.caption.trim(),photoIds:ids,at:Date.now()});S.pend.gallery=[];toast('Added to Gallery.');render(false);
   },
   async addsubject(d){await FS.addDoc(col('subjects'),{name:d.name.trim(),at:Date.now()});toast('Subject added.');render(false)},
-  async addbatch(d){const ids=await uploadPending('batches');await FS.addDoc(col('batches'),{name:d.name.trim(),fee:d.fee.trim(),seats:d.seats.trim(),desc:(d.desc||'').trim(),photoIds:ids,at:Date.now()});S.pend.batches=[];toast('Batch added.');render(false)},
   async addresult(d){const ids=await uploadPending('results');await FS.addDoc(col('results'),{name:d.name.trim(),exam:d.exam.trim(),marks:d.marks.trim(),photoIds:ids,at:Date.now()});S.pend.results=[];toast('Result added.');render(false)},
   async saveinfo(d){await FS.setDoc(FS.doc(db,'site','info'),{about:d.about.trim(),phone:d.phone.trim(),address:d.address.trim()});toast('Details saved.')}
 };
@@ -544,9 +582,9 @@ document.addEventListener('change',e=>{
 });
 
 /* ---------- clicks ---------- */
-const COLS={work:'work',notices:'notices',batches:'batches',results:'results',subjects:'subjects',gallery:'gallery'};
+const COLS={work:'work',notices:'notices',results:'results',subjects:'subjects',gallery:'gallery',submissions:'submissions'};
 const A={
-  tab(el){S.tab=el.dataset.tab;S.confirm='';S.focusId='';S.focusDone=true;render(false);if(S.tab==='word')checkMine()},
+  tab(el){S.tab=el.dataset.tab;S.confirm='';S.focusId='';S.focusDone=true;render(false)},
   atab(el){S.atab=el.dataset.id;S.confirm='';render(false)},
   filter(el){S.subFilter=el.dataset.id;render(false)},
   async mark(el){
@@ -558,7 +596,7 @@ const A={
     const type=el.dataset.type,id=el.dataset.id,k=type+':'+id;
     if(S.confirm!==k){S.confirm=k;render(true);return}
     S.confirm='';
-    const item=(type==='gallery'?S.posts:S[type]).find(x=>x.id===id);
+    const item=(type==='gallery'?S.posts:type==='submissions'?S.subs:S[type]).find(x=>x.id===id);
     try{
       for(const p of (item&&item.photoIds)||[]){await FS.deleteDoc(FS.doc(db,'gallery',p));pp.delete(p)}
       await FS.deleteDoc(FS.doc(db,COLS[type],id));toast('Deleted.');
@@ -597,10 +635,9 @@ document.addEventListener('click',e=>{
   const a=A[el.dataset.act];if(a)a(el);
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#lb').hidden)A.closelb()});
-window.addEventListener('hashchange',()=>{if(location.hash==='#teacher'){S.view=S.admin?'admin':'login';render(false)}else if(applyHash()){render(false);if(S.tab==='word')checkMine()}});
+window.addEventListener('hashchange',()=>{if(location.hash==='#teacher'){S.view=S.admin?'admin':'login';render(false)}else if(applyHash()){render(false)}});
 if(location.hash==='#teacher')S.view='login';else applyHash();
 render(false);
-checkMine();
 </script>
 </body>
 </html>
