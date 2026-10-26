@@ -626,7 +626,14 @@ const H={
       try{await AU.signOut(a2)}catch(e){}
     }catch(e){
       const c=(e&&e.code)||'';
-      toast(c.includes('email-already-in-use')?'This username is already taken. Choose another.':c.includes('weak-password')?'Password is too weak.':permMsg(e));return;
+      if(c.includes('email-already-in-use')){
+        /* account exists from an earlier try: reuse it if the password matches, and add it to the admin list */
+        try{
+          const r=await AU.signInWithEmailAndPassword(a2,u+UDOM,pw);
+          await FS.setDoc(FS.doc(db,'admins',r.user.uid),{username:u,at:Date.now()});
+          try{await AU.signOut(a2)}catch(x){}
+        }catch(x){toast('This username already exists with a different password. Use the same password as before, or choose another username.');return}
+      }else{toast(c.includes('weak-password')?'Password is too weak.':permMsg(e));return}
     }
     toast('Admin created. Username: '+u);render(false);
   },
