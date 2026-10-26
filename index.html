@@ -231,6 +231,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--board)}
 .mapbtn svg{flex:none}
 .wafab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:20;width:58px;height:58px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(0,0,0,.28);text-decoration:none}
 .wafab:active{transform:scale(.94)}
+main{padding-bottom:28px}
 .contactwrap{padding-block:0 96px}
 .adminbtn.themebtn{width:42px;min-width:42px;padding:0;flex:none}
 .themebtn svg{flex:none}
@@ -385,10 +386,10 @@ const shareBtn=(kind,it,cls,label)=>'<button type="button" class="btn '+(cls||'g
 const cardId=id=>' id="it-'+esc(id)+'" class="card'+(S.focusId===id?' hl':'')+'"';
 
 /* ---------- student views ---------- */
-const STABS=[['work','Daily Work'],['notices','Notice Board'],['word','Daily Word'],['gallery','Gallery'],['results','Results']];
+const STABS=[['work','Daily Work'],['notices','Notice Board'],['word','Daily Word'],['gallery','Gallery'],['results','Results'],['contact','Contact']];
 function contact(){
   const ph=(S.info.phone||'').replace(/\D/g,''),map=S.info.map||MAP_DEFAULT;
-  return '<div class="card"><h3>Contact &amp; Location</h3><p>'+(S.info.phone?'Phone: <strong>'+esc(S.info.phone)+'</strong>':'<span class="muted">Phone number will be added soon.</span>')+'</p>'+(S.info.address?'<p>Address: '+esc(S.info.address)+'</p>':'')
+  return '<div class="card"><h3>Arora Classes</h3><p>'+(S.info.phone?'Phone: <strong>'+esc(S.info.phone)+'</strong>':'<span class="muted">Phone number will be added soon.</span>')+'</p>'+(S.info.address?'<p>Address: '+esc(S.info.address)+'</p>':'')
   +'<div class="actions">'+(ph?'<a class="btn accent sm" href="https://wa.me/'+ph+'?text='+encodeURIComponent(WA_MSG)+'" target="_blank" rel="noopener">Chat on WhatsApp</a>':'')+'<a class="btn ghost sm mapbtn" href="'+esc(map)+'" target="_blank" rel="noopener">'+PIN+'<span>Open in Google Maps</span></a></div></div>';
 }
 const initial=n=>esc((n||'?').trim().charAt(0).toUpperCase());
@@ -425,6 +426,7 @@ function siteTab(){
   if(t==='notices')return '<section class="block"><h2>Notice Board</h2>'+(S.notices.length?'<ul class="list">'+S.notices.slice().sort(byNew).map(n=>'<li'+cardId(n.id)+'><p>'+esc(n.text)+'</p>'+photos(n.photoIds)+'<p class="small muted">'+fmt(n.at)+'</p></li>').join('')+'</ul>':empty(S.loaded.notices?'No notices yet.':'Loading…'))+'</section>';
   if(t==='word')return vWord();
   if(t==='gallery')return '<section class="block"><h2>Gallery</h2>'+(S.posts.length?'<ul class="list">'+S.posts.slice().sort(byNew).map(g=>'<li'+cardId(g.id)+'>'+(g.caption?'<h3>'+esc(g.caption)+'</h3>':'')+photos(g.photoIds,true)+'<p class="small muted">'+fmt(g.at)+'</p></li>').join('')+'</ul>':empty(S.loaded.gallery?'Photos coming soon.':'Loading…'))+'</section>';
+  if(t==='contact')return '<section class="block"><h2>Contact &amp; Location</h2>'+contact()+'</section>'+waFab();
   if(t==='results')return '<section class="block"><h2>Results</h2>'+(S.results.length?'<ul class="list">'+S.results.slice().sort(byNew).map(r=>'<li'+cardId(r.id)+'><div class="row"><h3>'+esc(r.name)+'</h3><span class="marks">'+esc(r.marks)+'</span></div><p class="small muted">'+esc(r.exam)+'</p>'+photos(r.photoIds)+'</li>').join('')+'</ul>':empty(S.loaded.results?'Results coming soon.':'Loading…'))+'</section>';
   return '';
 }
@@ -438,7 +440,7 @@ function vSite(){
   +'<div class="wrap welcome"><h2>Welcome to Arora Classes.</h2><p class="lead">'+esc(S.info.about||DEFAULT_ABOUT)+'</p><span class="timing">Daily 4:00 – 5:00 PM</span>'
   +'<div class="counters"><div class="counter"><b>'+S.work.length+'</b><span>Daily Work</span></div><div class="counter"><b>'+S.notices.length+'</b><span>Notice</span></div><div class="counter"><b>'+S.results.length+'</b><span>Result</span></div></div></div>'
   +'<nav class="tabs" aria-label="Menu"><div class="wrap tabrow">'+tabs+'</div></nav>'
-  +'<main class="wrap">'+siteTab()+'</main><div class="wrap contactwrap">'+contact()+'</div>'+waFab()+footer();
+  +'<main class="wrap">'+siteTab()+'</main>'+footer();
 }
 
 /* ---------- admin ---------- */
@@ -527,7 +529,7 @@ function focusItem(){
   if(key&&S.loaded[key]){S.focusDone=true;toast('This item is no longer on the website.')}
 }
 function applyHash(){
-  const m=/^#(work|notices|word|gallery|results)(?:-([A-Za-z0-9_-]+))?$/.exec(location.hash);
+  const m=/^#(work|notices|word|gallery|results|contact)(?:-([A-Za-z0-9_-]+))?$/.exec(location.hash);
   if(!m)return false;
   S.tab=m[1];S.focusId=m[2]||'';S.focusDone=!S.focusId;S.view='site';
   return true;
