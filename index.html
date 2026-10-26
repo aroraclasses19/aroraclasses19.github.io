@@ -258,7 +258,7 @@ const CFG={
 const ADMIN_UID='xKe6w1vmRLgQ8pKGFNTthEsgiTE2';
 const UDOM='@aroraclasses.app';
 const uname=s=>String(s||'').trim().toLowerCase();
-const toEmail=s=>{s=String(s||'').trim();return s.includes('@')?s:uname(s)+UDOM};
+const rnd=()=>Math.random().toString(36).slice(2,8);
 const shownName=e=>String(e||'').endsWith(UDOM)?e.slice(0,-UDOM.length):e;
 const FBV='10.14.1',FBB='https://www.gstatic.com/firebasejs/'+FBV+'/';
 
@@ -504,7 +504,7 @@ const PANELS={
     +'<div class="field"><label for="a-u">Username</label><input id="a-u" name="user" required minlength="3" maxlength="20" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="for example: teacher1"></div>'
     +'<div class="field"><label for="a-p">Password</label><input id="a-p" name="pw" type="text" required minlength="6" maxlength="40" autocomplete="off" autocapitalize="none" placeholder="at least 6 characters"></div>'
     +'<button class="btn primary" type="submit">Create admin</button></form></section>'
-    +'<section class="block"><h3>Current admins</h3>'+(S.admins.length?'<ul class="list">'+S.admins.map(a=>'<li class="card"><div class="row"><strong>'+esc(a.username||a.id)+'</strong>'+delBtn('admins',a.id)+'</div><p class="small muted">Added '+fmt(a.at)+'</p></li>').join('')+'</ul>':empty('No extra admins yet.'))+'<p class="small muted">Removing an admin stops their access at once. To change someone\'s password, remove them and create them again with a new password.</p></section>':'',
+    +'<section class="block"><h3>Current admins</h3>'+(S.admins.length?'<ul class="list">'+S.admins.map(a=>'<li class="card"><div class="row"><strong>'+esc(a.username||a.id)+'</strong>'+delBtn('admins',a.id)+'</div><p class="small muted">Added '+fmt(a.at)+'</p></li>').join('')+'</ul>':empty('No extra admins yet.'))+'<p class="small muted">Deleting an admin removes their access for good: their username and password stop working. You can then create the same username again with a new password.</p></section>':'',
   set:()=>'<section class="block"><h3>Coaching details</h3><form data-form="saveinfo">'
     +'<div class="field"><label for="s-a">About the coaching</label><textarea id="s-a" name="about">'+esc(S.info.about||DEFAULT_ABOUT)+'</textarea></div>'
     +'<div class="field"><label for="s-p">Phone / WhatsApp number (with 91)</label><input id="s-p" name="phone" type="tel" inputmode="numeric" value="'+esc(S.info.phone)+'" autocomplete="off"></div>'
@@ -628,27 +628,28 @@ const H={
     const u=uname(d.user),pw=d.pw||'';
     if(!/^[a-z0-9._-]{3,20}$/.test(u)){toast('Username: 3 to 20 letters or numbers (a-z, 0-9, . _ -).');return}
     if(pw.length<6){toast('Password must be at least 6 characters.');return}
-    if(S.admins.some(a=>a.username===u)){toast('This username already exists.');return}
+    if(S.admins.some(a=>a.username===u)){toast('This username already exists. Delete it first to make it again.');return}
     let app2;try{app2=FA.initializeApp(CFG,'second')}catch(e){app2=FA.getApp('second')}
-    const a2=AU.getAuth(app2);
+    const a2=AU.getAuth(app2),em=u+'-'+rnd()+UDOM;
     try{
-      const r=await AU.createUserWithEmailAndPassword(a2,u+UDOM,pw);
-      await FS.setDoc(FS.doc(db,'admins',r.user.uid),{username:u,at:Date.now()});
+      const r=await AU.createUserWithEmailAndPassword(a2,em,pw);
+      await FS.setDoc(FS.doc(db,'admins',r.user.uid),{username:u,email:em,at:Date.now()});
+      await FS.setDoc(FS.doc(db,'usernames',u),{email:em});
       try{await AU.signOut(a2)}catch(e){}
     }catch(e){
       const c=(e&&e.code)||'';
-      if(c.includes('email-already-in-use')){
-        /* account exists from an earlier try: reuse it if the password matches, and add it to the admin list */
-        try{
-          const r=await AU.signInWithEmailAndPassword(a2,u+UDOM,pw);
-          await FS.setDoc(FS.doc(db,'admins',r.user.uid),{username:u,at:Date.now()});
-          try{await AU.signOut(a2)}catch(x){}
-        }catch(x){toast('This username already exists with a different password. Use the same password as before, or choose another username.');return}
-      }else{toast(c.includes('weak-password')?'Password is too weak.':permMsg(e));return}
+      toast(c.includes('weak-password')?'Password is too weak.':permMsg(e));return;
     }
     toast('Admin created. Username: '+u);render(false);
   },
-  async login(d){try{await AU.signInWithEmailAndPassword(auth,toEmail(d.email),d.pw)}catch(e){toast(authMsg(e))}},
+  async login(d){
+    const raw=String(d.email||'').trim();let em=raw;
+    if(!raw.includes('@')){
+      const u=uname(raw);em=u+UDOM;
+      try{const s=await FS.getDoc(FS.doc(db,'usernames',u));if(s.exists()&&s.data().email)em=s.data().email}catch(e){}
+    }
+    try{await AU.signInWithEmailAndPassword(auth,em,d.pw)}catch(e){toast(authMsg(e))}
+  },
   async addwork(d){const ids=await uploadPending('work');await FS.addDoc(col('work'),{subject:d.subject,title:d.title.trim(),text:d.text.trim(),photoIds:ids,at:Date.now()});S.pend.work=[];toast('Daily Work posted.');render(false)},
   async setword(d){const ids=await uploadPending('word');const old=S.subs.slice();await FS.setDoc(FS.doc(db,'site','word'),{id:'w'+Date.now(),word:d.word.trim(),meaning:d.meaning.trim(),example:d.example.trim(),photoIds:ids,at:Date.now()});for(const o of old){try{await FS.deleteDoc(FS.doc(db,'submissions',o.id))}catch(e){}}S.pend.word=[];S.subFilter='pending';toast('New word is set. Old answers are cleared.');render(false)},
   async addnotice(d){const ids=await uploadPending('notices');await FS.addDoc(col('notices'),{text:d.text.trim(),photoIds:ids,at:Date.now()});S.pend.notices=[];toast('Notice posted.');render(false)},
@@ -702,7 +703,8 @@ const A={
     const item=(type==='gallery'?S.posts:type==='submissions'?S.subs:S[type])&&(type==='gallery'?S.posts:type==='submissions'?S.subs:S[type]).find(x=>x.id===id);
     try{
       for(const p of (item&&item.photoIds)||[]){await FS.deleteDoc(FS.doc(db,'gallery',p));pp.delete(p)}
-      await FS.deleteDoc(FS.doc(db,COLS[type],id));toast('Deleted.');
+      if(type==='admins'&&item&&item.username){try{await FS.deleteDoc(FS.doc(db,'usernames',item.username))}catch(e){}}
+      await FS.deleteDoc(FS.doc(db,COLS[type],id));toast(type==='admins'?'Admin deleted. That username can no longer log in. You can create it again with a new password.':'Deleted.');
     }catch(e){toast(permMsg(e))}
     render(true);
   },
