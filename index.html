@@ -237,6 +237,10 @@ main{padding-bottom:28px}
 .contactwrap{padding-block:0 96px}
 .adminbtn.themebtn{width:42px;min-width:42px;padding:0;flex:none}
 .themebtn svg{flex:none}
+
+.slots{display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start}
+.slotbtn{font:700 15px var(--font-body);border-radius:999px;padding:8px 16px;min-height:42px;border:1.5px solid var(--chalk);background:transparent;color:var(--ink);cursor:pointer}
+.slotbtn[aria-pressed="true"]{background:var(--chalk);color:var(--chalk-ink);box-shadow:0 4px 12px rgba(227,168,43,.35)}
 </style>
 </head>
 <body>
@@ -259,6 +263,11 @@ const ADMIN_UID='xKe6w1vmRLgQ8pKGFNTthEsgiTE2';
 const UDOM='@aroraclasses.app';
 const uname=s=>String(s||'').trim().toLowerCase();
 const rnd=()=>Math.random().toString(36).slice(2,8);
+const DEF_SLOTS=[{id:'b1',label:'Daily 4:00 – 5:00 PM'}];
+const BATCHED=['work','notices','results'];
+const inB=x=>(x.batch||'b1')===S.batch;
+const wordDocId=b=>b==='b1'?'word':'word_'+b;
+const slotLabel=id=>{const s=S.slots.find(x=>x.id===id);return s?s.label:''};
 const shownName=e=>String(e||'').endsWith(UDOM)?e.slice(0,-UDOM.length):e;
 const FBV='10.14.1',FBB='https://www.gstatic.com/firebasejs/'+FBV+'/';
 
@@ -282,7 +291,7 @@ try{
 /* ---------- state ---------- */
 const S={
   view:'site',tab:'work',atab:'work',subFilter:'pending',confirm:'',myName:lsGet('arora-name'),
-  admin:false,owner:false,email:'',admins:[],pend:{},fSub:'all',fSort:'new',busy:false,focusId:'',focusDone:true,
+  admin:false,owner:false,email:'',admins:[],batch:'b1',slots:[{id:'b1',label:'Daily 4:00 – 5:00 PM'}],all:{},pend:{},fSub:'all',fSort:'new',busy:false,focusId:'',focusDone:true,
   work:[],notices:[],batches:[],results:[],subjects:[],posts:[],subs:[],
   info:{about:'',phone:'',address:'',map:''},word:null,mine:null,loaded:{}
 };
@@ -369,6 +378,7 @@ const header=btn=>'<header class="top"><div class="wrap"><div class="brandrow"><
 const footer=()=>'';
 const subId=(wid,name)=>wid+'__'+encodeURIComponent(name.trim().toLowerCase().replace(/\s+/g,' ')).replace(/%/g,'_');
 const SITE='https://aroraclasses19.github.io/';
+const slotLink=id=>SITE+'#b-'+id;
 const MAP_DEFAULT='https://maps.app.goo.gl/WCTaCepbtRcoaPv87';
 const PIN='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>';
 const WA='<svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>';
@@ -440,10 +450,14 @@ function waFab(){
   const ph=(S.info.phone||'').replace(/\D/g,'');
   return ph?'<a class="wafab" href="https://wa.me/'+ph+'?text='+encodeURIComponent(WA_MSG)+'" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp" title="Chat on WhatsApp">'+WA+'</a>':'';
 }
+function slotBar(){
+  if(S.slots.length<2)return '<span class="timing">'+esc(S.slots[0].label)+'</span>';
+  return '<div class="slots" role="group" aria-label="Choose your batch">'+S.slots.map(s=>'<button type="button" class="slotbtn" aria-pressed="'+(s.id===S.batch)+'" data-act="batch" data-id="'+esc(s.id)+'">'+esc(s.label)+'</button>').join('')+'</div>';
+}
 function vSite(){
   const tabs=STABS.map(t=>'<button type="button" class="tab"'+(S.tab===t[0]?' aria-current="page"':'')+' data-act="tab" data-tab="'+t[0]+'">'+t[1]+'</button>').join('');
   return header(true)
-  +'<div class="wrap welcome"><h2>Welcome to Arora Classes.</h2><p class="lead">'+esc(S.info.about||DEFAULT_ABOUT)+'</p><span class="timing">Daily 4:00 – 5:00 PM</span>'
+  +'<div class="wrap welcome"><h2>Welcome to Arora Classes.</h2><p class="lead">'+esc(S.info.about||DEFAULT_ABOUT)+'</p>'+slotBar()
   +'<div class="counters"><div class="counter"><b>'+S.work.length+'</b><span>Daily Work</span></div><div class="counter"><b>'+S.notices.length+'</b><span>Notice</span></div><div class="counter"><b>'+S.results.length+'</b><span>Result</span></div></div></div>'
   +'<nav class="tabs" aria-label="Menu"><div class="wrap tabrow">'+tabs+'</div></nav>'
   +'<main class="wrap">'+siteTab()+'</main>'+footer();
@@ -457,15 +471,19 @@ function vLogin(){
   +'<button class="btn primary" type="submit">Sign in securely</button></form>'
   +'<div class="actions"><button type="button" class="btn ghost sm" data-act="site">Back to website</button><button type="button" class="btn ghost sm" data-act="forgot">Forgot password?</button></div></section></main>'+footer();
 }
-const ATABS=[['work','Daily Work'],['word','Daily Word'],['subs','Sentences'],['notices','Notices'],['gallery','Gallery'],['subjects','Subjects'],['results','Results'],['set','Settings'],['admins','Admins']];
+const ATABS=[['work','Daily Work'],['word','Daily Word'],['subs','Sentences'],['notices','Notices'],['gallery','Gallery'],['subjects','Subjects'],['results','Results'],['slots','Batches'],['set','Settings'],['admins','Admins']];
 const curSubs=()=>S.word?S.subs.filter(s=>s.wordId===S.word.id):[];
 const pendingCount=()=>curSubs().filter(s=>s.status==='pending').length;
+function batchPick(){
+  if(S.slots.length<2||!['work','word','subs','notices','results'].includes(S.atab))return '';
+  return '<section class="block"><p class="eyebrow">You are posting for this batch</p><div class="chips">'+S.slots.map(s=>'<button type="button" class="chip" aria-pressed="'+(s.id===S.batch)+'" data-act="batch" data-id="'+esc(s.id)+'">'+esc(s.label)+'</button>').join('')+'</div></section>';
+}
 function vAdmin(){
   const chips=ATABS.filter(t=>t[0]!=='admins'||S.owner).map(t=>{const c=t[0]==='subs'&&pendingCount()?'<span class="count">'+pendingCount()+'</span>':'';return '<button type="button" class="chip" aria-pressed="'+(S.atab===t[0])+'" data-act="atab" data-id="'+t[0]+'">'+t[1]+c+'</button>'}).join('');
   return header(false)+'<main class="wrap"><section class="block"><p class="eyebrow">Login: '+esc(shownName(S.email))+'</p><h2>Manage your class</h2><p class="muted small">Only the authorised account can publish or change content.</p>'
   +'<div class="actions"><button type="button" class="btn ghost sm" data-act="site">View website</button><button type="button" class="btn ghost sm" data-act="logout">Logout</button></div>'
   +'<div class="counters"><div class="counter"><b>'+S.work.length+'</b><span>Daily Work</span></div><div class="counter"><b>'+S.notices.length+'</b><span>Notice</span></div><div class="counter"><b>'+pendingCount()+'</b><span>Sentences pending</span></div></div>'
-  +'<div class="chips">'+chips+'</div></section>'+PANELS[S.atab]()+'</main>'+footer();
+  +'<div class="chips">'+chips+'</div></section>'+batchPick()+PANELS[S.atab]()+'</main>'+footer();
 }
 const PANELS={
   work:()=>'<section class="block"><h3>Post Daily Work</h3><form data-form="addwork">'
@@ -505,6 +523,10 @@ const PANELS={
     +'<div class="field"><label for="a-p">Password</label><input id="a-p" name="pw" type="text" required minlength="6" maxlength="40" autocomplete="off" autocapitalize="none" placeholder="at least 6 characters"></div>'
     +'<button class="btn primary" type="submit">Create admin</button></form></section>'
     +'<section class="block"><h3>Current admins</h3>'+(S.admins.length?'<ul class="list">'+S.admins.map(a=>'<li class="card"><div class="row"><strong>'+esc(a.username||a.id)+'</strong>'+delBtn('admins',a.id)+'</div><p class="small muted">Added '+fmt(a.at)+'</p></li>').join('')+'</ul>':empty('No extra admins yet.'))+'<p class="small muted">Deleting an admin removes their access for good: their username and password stop working. You can then create the same username again with a new password.</p></section>':'',
+  slots:()=>'<section class="block"><h3>Add a batch</h3><p class="muted small">Each batch gets its own Daily Work, notices, Daily Word and results. Gallery and Contact are the same for all batches. Students pick their batch on the home page, or you can send each batch its own link.</p><form data-form="addslot">'
+    +'<div class="field"><label for="sl-l">Batch time</label><input id="sl-l" name="label" required maxlength="40" autocomplete="off" placeholder="Daily 5:00 – 6:00 PM"></div>'
+    +'<button class="btn primary" type="submit">Add batch</button></form></section>'
+    +'<section class="block"><h3>Current batches</h3><ul class="list">'+S.slots.map((s,i)=>'<li class="card"><form data-form="saveslot"><input type="hidden" name="id" value="'+esc(s.id)+'"><div class="field"><label for="sl-'+esc(s.id)+'">Batch time</label><input id="sl-'+esc(s.id)+'" name="label" value="'+esc(s.label)+'" required maxlength="40" autocomplete="off"></div><div class="actions"><button class="btn ghost sm" type="submit">Save name</button><button type="button" class="btn ghost sm" data-act="copylink" data-id="'+esc(s.id)+'">Copy link</button>'+(i>0?'<button type="button" class="btn sm '+(S.confirm==='slot:'+s.id?'danger':'ghost')+'" data-act="delslot" data-id="'+esc(s.id)+'">'+(S.confirm==='slot:'+s.id?'Sure? Delete':'Delete')+'</button>':'')+'</div></form><p class="small muted" style="overflow-wrap:anywhere">Link: '+esc(slotLink(s.id))+'</p>'+(S.confirm==='slot:'+s.id?'<p class="small" style="color:var(--bad)">Its Daily Work, notices, Daily Word and results will stop showing.</p>':'')+'</li>').join('')+'</ul></section>',
   set:()=>'<section class="block"><h3>Coaching details</h3><form data-form="saveinfo">'
     +'<div class="field"><label for="s-a">About the coaching</label><textarea id="s-a" name="about">'+esc(S.info.about||DEFAULT_ABOUT)+'</textarea></div>'
     +'<div class="field"><label for="s-p">Phone / WhatsApp number (with 91)</label><input id="s-p" name="phone" type="tel" inputmode="numeric" value="'+esc(S.info.phone)+'" autocomplete="off"></div>'
@@ -549,6 +571,8 @@ function focusItem(){
   if(key&&S.loaded[key]){S.focusDone=true;toast('This item is no longer on the website.')}
 }
 function applyHash(){
+  const mb=/^#b-([A-Za-z0-9_]+)$/.exec(location.hash);
+  if(mb){S.view='site';S.tab='work';setBatch(mb[1]);return true}
   const m=/^#(work|notices|word|gallery|results|contact)(?:-([A-Za-z0-9_-]+))?$/.exec(location.hash);
   if(!m)return false;
   S.tab=m[1];S.focusId=m[2]||'';S.focusDone=!S.focusId;S.view='site';
@@ -557,19 +581,39 @@ function applyHash(){
 
 /* ---------- live data ---------- */
 const err=()=>toast('Could not load data. Check your internet.');
-function listen(name,key,onFirst){
-  FS.onSnapshot(FS.collection(db,name),s=>{S[key]=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded[name]=true;soft()},err);
+function applyBatch(){BATCHED.forEach(k=>{S[k]=(S.all[k]||[]).filter(inB)})}
+function listen(name,key){
+  FS.onSnapshot(FS.collection(db,name),s=>{
+    const arr=s.docs.map(d=>({id:d.id,...d.data()}));
+    if(BATCHED.includes(key)){S.all[key]=arr;applyBatch()}else S[key]=arr;
+    S.loaded[name]=true;soft();
+  },err);
 }
 listen('work','work');listen('notices','notices');listen('results','results');listen('subjects','subjects');
 FS.onSnapshot(FS.query(FS.collection(db,'gallery'),FS.where('type','==','post')),s=>{S.posts=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.gallery=true;soft()},err);
 FS.onSnapshot(FS.doc(db,'site','info'),s=>{S.info=Object.assign({about:'',phone:'',address:'',map:''},s.exists()?s.data():{});soft()},err);
-let lastWord='';
-FS.onSnapshot(FS.doc(db,'site','word'),s=>{
-  S.word=s.exists()?s.data():null;
-  const id=S.word?S.word.id:'';
-  if(id!==lastWord){lastWord=id;syncSubs()}
+let lastWord='',unW=null;
+function watchWord(){
+  if(unW){unW();unW=null}
+  unW=FS.onSnapshot(FS.doc(db,'site',wordDocId(S.batch)),s=>{
+    S.word=s.exists()?s.data():null;
+    const id=S.word?S.word.id:'';
+    if(id!==lastWord){lastWord=id;syncSubs()}
+    soft();
+  },err);
+}
+function setBatch(id,fromClick){
+  if(!id||id===S.batch&&!fromClick)return;
+  S.batch=id;S.confirm='';S.focusId='';S.focusDone=true;
+  S.word=null;lastWord='';applyBatch();syncSubs();watchWord();
+}
+FS.onSnapshot(FS.doc(db,'site','slots'),s=>{
+  const l=s.exists()&&Array.isArray(s.data().list)&&s.data().list.length?s.data().list:DEF_SLOTS;
+  S.slots=l;
+  if(!l.some(x=>x.id===S.batch))setBatch(l[0].id);
   soft();
-},err);
+},()=>{});
+watchWord();
 setTimeout(()=>{['work','notices','results','gallery','subs'].forEach(k=>S.loaded[k]=true);soft()},6000);
 
 let unsubSubs=null,subsKey='';
@@ -623,6 +667,16 @@ const H={
     }catch(e){toast('Could not send the sentence. Check your internet and send again.');return}
     render(false);
   },
+  async addslot(d){
+    const label=d.label.trim();if(!label)return;
+    const list=S.slots.concat([{id:'b'+Date.now().toString(36),label}]);
+    await FS.setDoc(FS.doc(db,'site','slots'),{list});toast('Batch added.');render(false);
+  },
+  async saveslot(d){
+    const label=d.label.trim();if(!label)return;
+    const list=S.slots.map(s=>s.id===d.id?{...s,label}:s);
+    await FS.setDoc(FS.doc(db,'site','slots'),{list});toast('Batch name saved.');
+  },
   async addadmin(d){
     if(!S.owner){toast('Only the owner can add admins.');return}
     const u=uname(d.user),pw=d.pw||'';
@@ -650,15 +704,15 @@ const H={
     }
     try{await AU.signInWithEmailAndPassword(auth,em,d.pw)}catch(e){toast(authMsg(e))}
   },
-  async addwork(d){const ids=await uploadPending('work');await FS.addDoc(col('work'),{subject:d.subject,title:d.title.trim(),text:d.text.trim(),photoIds:ids,at:Date.now()});S.pend.work=[];toast('Daily Work posted.');render(false)},
-  async setword(d){const ids=await uploadPending('word');const old=S.subs.slice();await FS.setDoc(FS.doc(db,'site','word'),{id:'w'+Date.now(),word:d.word.trim(),meaning:d.meaning.trim(),example:d.example.trim(),photoIds:ids,at:Date.now()});for(const o of old){try{await FS.deleteDoc(FS.doc(db,'submissions',o.id))}catch(e){}}S.pend.word=[];S.subFilter='pending';toast('New word is set. Old answers are cleared.');render(false)},
-  async addnotice(d){const ids=await uploadPending('notices');await FS.addDoc(col('notices'),{text:d.text.trim(),photoIds:ids,at:Date.now()});S.pend.notices=[];toast('Notice posted.');render(false)},
+  async addwork(d){const ids=await uploadPending('work');await FS.addDoc(col('work'),{batch:S.batch,subject:d.subject,title:d.title.trim(),text:d.text.trim(),photoIds:ids,at:Date.now()});S.pend.work=[];toast('Daily Work posted.');render(false)},
+  async setword(d){const ids=await uploadPending('word');const old=S.subs.slice();await FS.setDoc(FS.doc(db,'site',wordDocId(S.batch)),{id:'w'+Date.now(),word:d.word.trim(),meaning:d.meaning.trim(),example:d.example.trim(),photoIds:ids,at:Date.now()});for(const o of old){try{await FS.deleteDoc(FS.doc(db,'submissions',o.id))}catch(e){}}S.pend.word=[];S.subFilter='pending';toast('New word is set. Old answers are cleared.');render(false)},
+  async addnotice(d){const ids=await uploadPending('notices');await FS.addDoc(col('notices'),{batch:S.batch,text:d.text.trim(),photoIds:ids,at:Date.now()});S.pend.notices=[];toast('Notice posted.');render(false)},
   async addgallery(d){
     if(!(S.pend.gallery||[]).length){toast('Please choose a photo first.');return}
     const ids=await uploadPending('gallery');await FS.addDoc(col('gallery'),{type:'post',caption:d.caption.trim(),photoIds:ids,at:Date.now()});S.pend.gallery=[];toast('Added to Gallery.');render(false);
   },
   async addsubject(d){await FS.addDoc(col('subjects'),{name:d.name.trim(),at:Date.now()});toast('Subject added.');render(false)},
-  async addresult(d){const ids=await uploadPending('results');await FS.addDoc(col('results'),{name:d.name.trim(),exam:d.exam.trim(),marks:d.marks.trim(),photoIds:ids,at:Date.now()});S.pend.results=[];toast('Result added.');render(false)},
+  async addresult(d){const ids=await uploadPending('results');await FS.addDoc(col('results'),{batch:S.batch,name:d.name.trim(),exam:d.exam.trim(),marks:d.marks.trim(),photoIds:ids,at:Date.now()});S.pend.results=[];toast('Result added.');render(false)},
   async saveinfo(d){await FS.setDoc(FS.doc(db,'site','info'),{about:d.about.trim(),phone:d.phone.trim(),address:d.address.trim(),map:(d.map||'').trim()});toast('Details saved.')}
 };
 document.addEventListener('submit',e=>{
@@ -687,6 +741,18 @@ const A={
       const u=new SpeechSynthesisUtterance(el.dataset.say||'');u.lang='en-IN';u.rate=.85;
       speechSynthesis.speak(u);
     }catch(e){toast('Audio could not be played.')}
+  },
+  batch(el){setBatch(el.dataset.id,true);try{history.replaceState(null,'','#b-'+el.dataset.id)}catch(e){}render(false)},
+  copylink(el){
+    const l=slotLink(el.dataset.id);
+    (navigator.clipboard?navigator.clipboard.writeText(l):Promise.reject()).then(()=>toast('Link copied.')).catch(()=>toast('Copy this link: '+l));
+  },
+  async delslot(el){
+    const id=el.dataset.id,k='slot:'+id;
+    if(S.confirm!==k){S.confirm=k;render(true);return}
+    S.confirm='';
+    try{await FS.setDoc(FS.doc(db,'site','slots'),{list:S.slots.filter(s=>s.id!==id||s.id==='b1')});toast('Batch deleted.')}catch(e){toast(permMsg(e))}
+    render(true);
   },
   theme(){lsSet(THEME_KEY,isDark()?'light':'dark');applyTheme();render(true)},
   atab(el){S.atab=el.dataset.id;S.confirm='';render(false)},
@@ -743,6 +809,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#lb').hidden)A.closelb()});
 window.addEventListener('hashchange',()=>{if(location.hash==='#teacher'){S.view=S.admin?'admin':'login';render(false)}else if(applyHash()){render(false)}});
 if(location.hash==='#teacher')S.view='login';else applyHash();
+setBatch(S.batch,true);
 render(false);
 </script>
 </body>
