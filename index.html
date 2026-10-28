@@ -479,7 +479,7 @@ function batchPick(){
   return '<section class="block"><p class="eyebrow">You are posting for this batch</p><div class="chips">'+S.slots.map(s=>'<button type="button" class="chip" aria-pressed="'+(s.id===S.batch)+'" data-act="batch" data-id="'+esc(s.id)+'">'+esc(s.label)+'</button>').join('')+'</div></section>';
 }
 function vAdmin(){
-  const chips=ATABS.filter(t=>t[0]!=='admins'||S.owner).map(t=>{const c=t[0]==='subs'&&pendingCount()?'<span class="count">'+pendingCount()+'</span>':'';return '<button type="button" class="chip" aria-pressed="'+(S.atab===t[0])+'" data-act="atab" data-id="'+t[0]+'">'+t[1]+c+'</button>'}).join('');
+  const chips=ATABS.filter(t=>(t[0]!=='admins'&&t[0]!=='slots')||S.owner).map(t=>{const c=t[0]==='subs'&&pendingCount()?'<span class="count">'+pendingCount()+'</span>':'';return '<button type="button" class="chip" aria-pressed="'+(S.atab===t[0])+'" data-act="atab" data-id="'+t[0]+'">'+t[1]+c+'</button>'}).join('');
   return header(false)+'<main class="wrap"><section class="block"><p class="eyebrow">Login: '+esc(shownName(S.email))+'</p><h2>Manage your class</h2><p class="muted small">Only the authorised account can publish or change content.</p>'
   +'<div class="actions"><button type="button" class="btn ghost sm" data-act="site">View website</button><button type="button" class="btn ghost sm" data-act="logout">Logout</button></div>'
   +'<div class="counters"><div class="counter"><b>'+S.work.length+'</b><span>Daily Work</span></div><div class="counter"><b>'+S.notices.length+'</b><span>Notice</span></div><div class="counter"><b>'+pendingCount()+'</b><span>Sentences pending</span></div></div>'
@@ -523,7 +523,7 @@ const PANELS={
     +'<div class="field"><label for="a-p">Password</label><input id="a-p" name="pw" type="text" required minlength="6" maxlength="40" autocomplete="off" autocapitalize="none" placeholder="at least 6 characters"></div>'
     +'<button class="btn primary" type="submit">Create admin</button></form></section>'
     +'<section class="block"><h3>Current admins</h3>'+(S.admins.length?'<ul class="list">'+S.admins.map(a=>'<li class="card"><div class="row"><strong>'+esc(a.username||a.id)+'</strong>'+delBtn('admins',a.id)+'</div><p class="small muted">Added '+fmt(a.at)+'</p></li>').join('')+'</ul>':empty('No extra admins yet.'))+'<p class="small muted">Deleting an admin removes their access for good: their username and password stop working. You can then create the same username again with a new password.</p></section>':'',
-  slots:()=>'<section class="block"><h3>Add a batch</h3><p class="muted small">Each batch gets its own Daily Work, notices, Daily Word and results. Gallery and Contact are the same for all batches. Students pick their batch on the home page, or you can send each batch its own link.</p><form data-form="addslot">'
+  slots:()=>!S.owner?'':'<section class="block"><h3>Add a batch</h3><p class="muted small">Each batch gets its own Daily Work, notices, Daily Word and results. Gallery and Contact are the same for all batches. Students pick their batch on the home page, or you can send each batch its own link.</p><form data-form="addslot">'
     +'<div class="field"><label for="sl-l">Batch time</label><input id="sl-l" name="label" required maxlength="40" autocomplete="off" placeholder="Daily 5:00 – 6:00 PM"></div>'
     +'<button class="btn primary" type="submit">Add batch</button></form></section>'
     +'<section class="block"><h3>Current batches</h3><ul class="list">'+S.slots.map((s,i)=>'<li class="card"><form data-form="saveslot"><input type="hidden" name="id" value="'+esc(s.id)+'"><div class="field"><label for="sl-'+esc(s.id)+'">Batch time</label><input id="sl-'+esc(s.id)+'" name="label" value="'+esc(s.label)+'" required maxlength="40" autocomplete="off"></div><div class="actions"><button class="btn ghost sm" type="submit">Save name</button><button type="button" class="btn ghost sm" data-act="copylink" data-id="'+esc(s.id)+'">Copy link</button>'+(i>0?'<button type="button" class="btn sm '+(S.confirm==='slot:'+s.id?'danger':'ghost')+'" data-act="delslot" data-id="'+esc(s.id)+'">'+(S.confirm==='slot:'+s.id?'Sure? Delete':'Delete')+'</button>':'')+'</div></form><p class="small muted" style="overflow-wrap:anywhere">Link: '+esc(slotLink(s.id))+'</p>'+(S.confirm==='slot:'+s.id?'<p class="small" style="color:var(--bad)">Its Daily Work, notices, Daily Word and results will stop showing.</p>':'')+'</li>').join('')+'</ul></section>',
@@ -668,11 +668,13 @@ const H={
     render(false);
   },
   async addslot(d){
+    if(!S.owner){toast('Only the owner can add batches.');return}
     const label=d.label.trim();if(!label)return;
     const list=S.slots.concat([{id:'b'+Date.now().toString(36),label}]);
     await FS.setDoc(FS.doc(db,'site','slots'),{list});toast('Batch added.');render(false);
   },
   async saveslot(d){
+    if(!S.owner){toast('Only the owner can change batches.');return}
     const label=d.label.trim();if(!label)return;
     const list=S.slots.map(s=>s.id===d.id?{...s,label}:s);
     await FS.setDoc(FS.doc(db,'site','slots'),{list});toast('Batch name saved.');
@@ -748,6 +750,7 @@ const A={
     (navigator.clipboard?navigator.clipboard.writeText(l):Promise.reject()).then(()=>toast('Link copied.')).catch(()=>toast('Copy this link: '+l));
   },
   async delslot(el){
+    if(!S.owner){toast('Only the owner can delete batches.');return}
     const id=el.dataset.id,k='slot:'+id;
     if(S.confirm!==k){S.confirm=k;render(true);return}
     S.confirm='';
