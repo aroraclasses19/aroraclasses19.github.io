@@ -451,8 +451,8 @@ function waFab(){
   return ph?'<a class="wafab" href="https://wa.me/'+ph+'?text='+encodeURIComponent(WA_MSG)+'" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp" title="Chat on WhatsApp">'+WA+'</a>':'';
 }
 function slotBar(){
-  if(S.slots.length<2)return '<span class="timing">'+esc(S.slots[0].label)+'</span>';
-  return '<div class="slots" role="group" aria-label="Choose your batch">'+S.slots.map(s=>'<button type="button" class="slotbtn" aria-pressed="'+(s.id===S.batch)+'" data-act="batch" data-id="'+esc(s.id)+'">'+esc(s.label)+'</button>').join('')+'</div>';
+  if(S.slots.length<2||!S.admin)return '<span class="timing">'+esc(slotLabel(S.batch)||S.slots[0].label)+'</span>';
+  return '<div class="slots" role="group" aria-label="Switch batch (admin only)">'+S.slots.map(s=>'<button type="button" class="slotbtn" aria-pressed="'+(s.id===S.batch)+'" data-act="batch" data-id="'+esc(s.id)+'">'+esc(s.label)+'</button>').join('')+'</div>';
 }
 function vSite(){
   const tabs=STABS.map(t=>'<button type="button" class="tab"'+(S.tab===t[0]?' aria-current="page"':'')+' data-act="tab" data-tab="'+t[0]+'">'+t[1]+'</button>').join('');
